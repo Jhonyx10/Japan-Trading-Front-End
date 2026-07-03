@@ -12,7 +12,7 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     ChevronDown,
-    Toolbox,
+    ClipboardList,
     CheckSquare,
     UserCheck,
     History,
@@ -20,6 +20,7 @@ import {
     CreditCard,
     LucideHistory,
     Package,
+    ArrowLeftRight,
 } from 'lucide-react'
 import companyLogo from '../assets/Images/company-logo.png.png'
 
@@ -34,7 +35,7 @@ const manageSubItems = [
 ]
 
 const repairJobsSubItems = [
-    { name: 'Repair Requests', path: '/repair/requests', icon: Toolbox },
+    { name: 'Repair Requests', path: '/repair/requests', icon: ClipboardList },
     { name: 'Assigned Jobs', path: '/repair/assigned', icon: UserCheck },
     { name: 'Repair History', path: '/repair/history', icon: History },
 ]
@@ -47,7 +48,7 @@ const invoicesSubItems = [
 
 const inventorySubItems = [
     { name: 'Stocks', path: '/inventory/stocks', icon: Package },
-    { name: 'Item Movements', path: '/inventory/movements', icon: CreditCard },
+    { name: 'Item Movements', path: '/inventory/movements', icon: ArrowLeftRight },
 ]
 
 const AuthLayout = () => {
@@ -168,21 +169,66 @@ const AuthLayout = () => {
     const activePage = getActivePageName()
     const userInitial = user?.role?.name?.charAt(0).toUpperCase() || 'U'
 
+    // Shared classnames for the dropdown triggers, kept in one place so
+    // Manage / Repair Jobs / Invoices / Inventory stay visually identical.
+    const dropdownTriggerClass = (isActive) =>
+        `group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+            isActive
+                ? 'bg-indigo-500/10 text-indigo-300'
+                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+        }`
+
+    const dropdownIconWrapClass = (isActive) =>
+        `flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+            isActive ? 'bg-indigo-500/15 text-indigo-300' : 'bg-slate-800/60 text-slate-400'
+        }`
+
+    const subItemClass = ({ isActive }) =>
+        `flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+        isActive
+            ? 'bg-slate-800 text-white'
+            : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-200'
+    }`;
+
+// Tree-style hierarchy: a trunk line runs down from the parent, with a
+// short elbow connecting to each child.
+const SubNavGroup = ({ items }) => (
+    <div className="relative mr-[27px] mt-1 flex flex-col gap-0.5 pb-1.5">
+        {/* Vertical Trunk Line */}
+        <div className="pointer-events-none absolute left-0 top-0 w-px bg-slate-800" style={{ height: `calc(100% - 15px)` }} />
+        
+        {items.map((item) => {
+            const Icon = item.icon;
+            return (
+                <div key={item.path} className="relative pl-5">
+                    {/* Horizontal Elbow Connector */}
+                    <span className="pointer-events-none absolute left-0 top-[17px] h-px w-4 bg-slate-800" />
+                    
+                    <NavLink to={item.path} className={subItemClass}>
+                        <Icon className="h-[15px] w-[15px] shrink-0" strokeWidth={2} />
+                        <span className="truncate">{item.name}</span>
+                    </NavLink>
+                </div>
+            );
+        })}
+    </div>
+);
+
     return (
         <div className="flex min-h-screen overflow-hidden bg-slate-950 font-sans text-slate-100">
             <motion.aside
-                animate={{ width: sidebarOpen ? 200 : 88 }}
+                animate={{ width: sidebarOpen ? 216 : 84 }}
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="relative z-20 flex shrink-0 flex-col border-r border-slate-800/80 bg-slate-900"
+                className="relative z-20 flex shrink-0 flex-col border-r border-slate-800/60 bg-slate-900/60"
             >
                 {/* Brand */}
-                <div className="flex h-[72px] items-center justify-between border-b border-slate-800/80 px-5">
+                <div className="flex h-16 items-center border-b border-slate-800/60 px-5">
                     <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-white to-violet-500 p-2 shadow-lg shadow-indigo-500/20">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 p-1.5">
                             <img
                                 src={companyLogo}
                                 alt="Japan Trading Logo"
-                                className="h-full w-auto object-contain brightness-105"
+                                className="h-full w-auto object-contain"
                             />
                         </div>
                         <AnimatePresence mode="wait">
@@ -194,10 +240,10 @@ const AuthLayout = () => {
                                     transition={{ duration: 0.15 }}
                                     className="min-w-0"
                                 >
-                                    <p className="truncate text-sm font-bold tracking-wide text-white">
+                                    <p className="truncate text-sm font-semibold tracking-tight text-white">
                                         Japan Trading
                                     </p>
-                                    <p className="truncate text-xs text-slate-500">Workshop Console</p>
+                                    <p className="truncate text-[11px] text-slate-500">Workshop console</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -205,14 +251,14 @@ const AuthLayout = () => {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-6">
+                <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
                     <AnimatePresence mode="wait">
                         {sidebarOpen && (
                             <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500"
+                                className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600"
                             >
                                 Menu
                             </motion.p>
@@ -228,21 +274,24 @@ const AuthLayout = () => {
                                 to={item.path}
                                 title={!sidebarOpen ? item.name : undefined}
                                 className={({ isActive }) =>
-                                    `group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all ${
+                                    `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                                         isActive
-                                            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
-                                            : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
+                                            ? 'bg-indigo-500/10 text-indigo-300'
+                                            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                                     }`
                                 }
                             >
                                 {({ isActive }) => (
                                     <>
+                                        {isActive && (
+                                            <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-400" />
+                                        )}
                                         <span
-                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                                isActive ? 'bg-white/10' : 'bg-slate-950/30'
+                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                                isActive ? 'bg-indigo-500/15 text-indigo-300' : 'bg-slate-800/60 text-slate-400'
                                             }`}
                                         >
-                                            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                                            <Icon className="h-[17px] w-[17px]" strokeWidth={2} />
                                         </span>
                                         <AnimatePresence mode="wait">
                                             {sidebarOpen && (
@@ -269,18 +318,13 @@ const AuthLayout = () => {
                             type="button"
                             onClick={() => setManageOpen((open) => !open)}
                             title={!sidebarOpen ? 'Manage' : undefined}
-                            className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all ${
-                                isManageActive
-                                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
-                                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
-                            }`}
+                            className={dropdownTriggerClass(isManageActive)}
                         >
-                            <span
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                    isManageActive ? 'bg-white/10' : 'bg-slate-950/30'
-                                }`}
-                            >
-                                <Settings className="h-[18px] w-[18px]" strokeWidth={2} />
+                            {isManageActive && (
+                                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-400" />
+                            )}
+                            <span className={dropdownIconWrapClass(isManageActive)}>
+                                <Settings className="h-[17px] w-[17px]" strokeWidth={2} />
                             </span>
 
                             <AnimatePresence mode="wait">
@@ -299,7 +343,7 @@ const AuthLayout = () => {
 
                             {sidebarOpen && (
                                 <ChevronDown
-                                    className={`ml-auto h-4 w-4 shrink-0 transition-transform ${
+                                    className={`ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform ${
                                         manageOpen ? 'rotate-180' : ''
                                     }`}
                                     strokeWidth={2}
@@ -316,27 +360,7 @@ const AuthLayout = () => {
                                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-slate-800 pl-5">
-                                        {manageSubItems.map((item) => {
-                                            const Icon = item.icon
-                                            return (
-                                                <NavLink
-                                                    key={item.path}
-                                                    to={item.path}
-                                                    className={({ isActive }) =>
-                                                        `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                            isActive
-                                                                ? 'bg-slate-800 text-white'
-                                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
-                                                        }`
-                                                    }
-                                                >
-                                                    <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                    <span className="truncate">{item.name}</span>
-                                                </NavLink>
-                                            )
-                                        })}
-                                    </div>
+                                    <SubNavGroup items={manageSubItems} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -348,18 +372,13 @@ const AuthLayout = () => {
                             type="button"
                             onClick={() => setRepairJobsOpen((open) => !open)}
                             title={!sidebarOpen ? 'Repair Jobs' : undefined}
-                            className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all ${
-                                isRepairJobsActive
-                                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
-                                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
-                            }`}
+                            className={dropdownTriggerClass(isRepairJobsActive)}
                         >
-                            <span
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                    isRepairJobsActive ? 'bg-white/10' : 'bg-slate-950/30'
-                                }`}
-                            >
-                                <Wrench className="h-[18px] w-[18px]" strokeWidth={2} />
+                            {isRepairJobsActive && (
+                                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-400" />
+                            )}
+                            <span className={dropdownIconWrapClass(isRepairJobsActive)}>
+                                <Wrench className="h-[17px] w-[17px]" strokeWidth={2} />
                             </span>
 
                             <AnimatePresence mode="wait">
@@ -378,7 +397,7 @@ const AuthLayout = () => {
 
                             {sidebarOpen && (
                                 <ChevronDown
-                                    className={`ml-auto h-4 w-4 shrink-0 transition-transform ${
+                                    className={`ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform ${
                                         repairJobsOpen ? 'rotate-180' : ''
                                     }`}
                                     strokeWidth={2}
@@ -395,50 +414,25 @@ const AuthLayout = () => {
                                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-slate-800 pl-5">
-                                        {repairJobsSubItems.map((item) => {
-                                            const Icon = item.icon
-                                            return (
-                                                <NavLink
-                                                    key={item.path}
-                                                    to={item.path}
-                                                    className={({ isActive }) =>
-                                                        `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                            isActive
-                                                                ? 'bg-slate-800 text-white'
-                                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
-                                                        }`
-                                                    }
-                                                >
-                                                    <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                    <span className="truncate">{item.name}</span>
-                                                </NavLink>
-                                            )
-                                        })}
-                                    </div>
+                                    <SubNavGroup items={repairJobsSubItems} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
 
                     {/* Invoices Dropdown */}
-                              <div>
+                    <div>
                         <button
                             type="button"
                             onClick={() => setInvoicesOpen((open) => !open)}
                             title={!sidebarOpen ? 'Invoices' : undefined}
-                            className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all ${
-                                isinvoicesActive
-                                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
-                                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
-                            }`}
+                            className={dropdownTriggerClass(isinvoicesActive)}
                         >
-                            <span
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                    isinvoicesActive ? 'bg-white/10' : 'bg-slate-950/30'
-                                }`}
-                            >
-                                <CreditCard className="h-[18px] w-[18px]" strokeWidth={2} />
+                            {isinvoicesActive && (
+                                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-400" />
+                            )}
+                            <span className={dropdownIconWrapClass(isinvoicesActive)}>
+                                <CreditCard className="h-[17px] w-[17px]" strokeWidth={2} />
                             </span>
 
                             <AnimatePresence mode="wait">
@@ -457,7 +451,7 @@ const AuthLayout = () => {
 
                             {sidebarOpen && (
                                 <ChevronDown
-                                    className={`ml-auto h-4 w-4 shrink-0 transition-transform ${
+                                    className={`ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform ${
                                         invoicesOpen ? 'rotate-180' : ''
                                     }`}
                                     strokeWidth={2}
@@ -474,48 +468,25 @@ const AuthLayout = () => {
                                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-slate-800 pl-5">
-                                        {invoicesSubItems.map((item) => {
-                                            const Icon = item.icon
-                                            return (
-                                                <NavLink
-                                                    key={item.path}
-                                                    to={item.path}
-                                                    className={({ isActive }) =>
-                                                        `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                            isActive
-                                                                ? 'bg-slate-800 text-white'
-                                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
-                                                        }`
-                                                    }
-                                                >
-                                                    <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                    <span className="truncate">{item.name}</span>
-                                                </NavLink>
-                                            )
-                                        })}
-                                    </div>
+                                    <SubNavGroup items={invoicesSubItems} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
-                       <div>
+
+                    {/* Inventory Dropdown */}
+                    <div>
                         <button
                             type="button"
                             onClick={() => setInventoryOpen((open) => !open)}
                             title={!sidebarOpen ? 'Inventory' : undefined}
-                            className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all ${
-                                inventoryOpen
-                                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/20'
-                                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100'
-                            }`}
+                            className={dropdownTriggerClass(isInventoryActive)}
                         >
-                            <span
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                    inventoryOpen ? 'bg-white/10' : 'bg-slate-950/30'
-                                }`}
-                            >
-                                <Wrench className="h-[18px] w-[18px]" strokeWidth={2} />
+                            {isInventoryActive && (
+                                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-400" />
+                            )}
+                            <span className={dropdownIconWrapClass(isInventoryActive)}>
+                                <Package className="h-[17px] w-[17px]" strokeWidth={2} />
                             </span>
 
                             <AnimatePresence mode="wait">
@@ -534,7 +505,7 @@ const AuthLayout = () => {
 
                             {sidebarOpen && (
                                 <ChevronDown
-                                    className={`ml-auto h-4 w-4 shrink-0 transition-transform ${
+                                    className={`ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform ${
                                         inventoryOpen ? 'rotate-180' : ''
                                     }`}
                                     strokeWidth={2}
@@ -551,27 +522,7 @@ const AuthLayout = () => {
                                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-slate-800 pl-5">
-                                        {inventorySubItems.map((item) => {
-                                            const Icon = item.icon
-                                            return (
-                                                <NavLink
-                                                    key={item.path}
-                                                    to={item.path}
-                                                    className={({ isActive }) =>
-                                                        `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                            isActive
-                                                                ? 'bg-slate-800 text-white'
-                                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
-                                                        }`
-                                                    }
-                                                >
-                                                    <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                    <span className="truncate">{item.name}</span>
-                                                </NavLink>
-                                            )
-                                        })}
-                                    </div>
+                                    <SubNavGroup items={inventorySubItems} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -579,18 +530,18 @@ const AuthLayout = () => {
                 </nav>
 
                 {/* Sidebar footer */}
-                <div className="border-t border-slate-800/80 p-4">
+                <div className="border-t border-slate-800/60 p-3">
                     <button
                         type="button"
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/70 hover:text-slate-100"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200"
                         aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
                     >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-800/60">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800/60">
                             {sidebarOpen ? (
-                                <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={2} />
+                                <PanelLeftClose className="h-[17px] w-[17px]" strokeWidth={2} />
                             ) : (
-                                <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={2} />
+                                <PanelLeftOpen className="h-[17px] w-[17px]" strokeWidth={2} />
                             )}
                         </span>
                         <AnimatePresence mode="wait">
@@ -611,12 +562,12 @@ const AuthLayout = () => {
 
             {/* Main area */}
             <div className="relative flex min-w-0 flex-1 flex-col">
-                <header className="z-10 flex h-[72px] items-center justify-between border-b border-slate-800/80 bg-slate-900/60 px-6 backdrop-blur-md md:px-8">
+                <header className="z-10 flex h-16 items-center justify-between border-b border-slate-800/60 bg-slate-950/80 px-6 backdrop-blur-md md:px-8">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/80">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                             Overview
                         </p>
-                        <h1 className="mt-1 text-xl font-semibold tracking-tight text-white capitalize">
+                        <h1 className="mt-0.5 text-lg font-semibold tracking-tight text-white capitalize">
                             {activePage}
                         </h1>
                     </div>
@@ -627,16 +578,16 @@ const AuthLayout = () => {
                             onClick={() => setUserMenuOpen((open) => !open)}
                             aria-expanded={userMenuOpen}
                             aria-haspopup="menu"
-                            className="flex items-center gap-3 rounded-2xl border border-slate-800/80 bg-slate-900/80 px-3 py-2.5 transition-colors hover:border-slate-700 hover:bg-slate-800/80 sm:px-4"
+                            className="flex items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-900/60 px-3 py-2 transition-colors hover:border-slate-700 hover:bg-slate-800/60 sm:px-3.5"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-indigo-500/30 bg-slate-800 text-sm font-bold text-indigo-400">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-sm font-semibold text-indigo-300">
                                 {userInitial}
                             </div>
                             <div className="hidden text-left sm:block">
-                                <p className="text-sm font-semibold leading-none text-white">
+                                <p className="text-sm font-medium leading-none text-white">
                                     {user?.role?.name || 'User'}
                                 </p>
-                                <p className="mt-1.5 max-w-[180px] truncate text-xs text-slate-400">
+                                <p className="mt-1.5 max-w-[180px] truncate text-xs text-slate-500">
                                     {user?.email}
                                 </p>
                             </div>
@@ -651,30 +602,30 @@ const AuthLayout = () => {
                         <AnimatePresence>
                             {userMenuOpen && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                                    initial={{ opacity: 0, y: 6, scale: 0.98 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
                                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                                    className="absolute right-0 z-50 mt-3 w-56 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900 shadow-xl shadow-black/20"
+                                    className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-lg shadow-black/30"
                                     role="menu"
                                 >
-                                    <div className="px-2 py-3">
+                                    <div className="p-1.5">
                                         <button
                                             type="button"
                                             onClick={handleProfileNavigate}
                                             role="menuitem"
-                                            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all hover:bg-slate-800"
+                                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800"
                                         >
-                                            <UserCircle className="h-[18px] w-[18px]" strokeWidth={2} />
+                                            <UserCircle className="h-[17px] w-[17px]" strokeWidth={2} />
                                             Profile
                                         </button>
                                         <button
                                             type="button"
                                             onClick={handleLogout}
                                             role="menuitem"
-                                            className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
+                                            className="mt-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
                                         >
-                                            <LogOut className="h-[18px] w-[18px]" strokeWidth={2} />
+                                            <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
                                             Logout
                                         </button>
                                     </div>

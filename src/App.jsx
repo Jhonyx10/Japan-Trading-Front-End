@@ -1,19 +1,22 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import HomePage from './Pages/HomePage'
-import AuthNavigation from './Navigations/AuthNavigation'
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// 1. Lazy load the heavy navigation/pages
+const HomePage = lazy(() => import('./Pages/HomePage'));
+const AuthNavigation = lazy(() => import('./Navigations/AuthNavigation'));
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<HomePage />} />
-
-        {/* Authenticated Dashboard Scope */}
-        <Route path="/*" element={<AuthNavigation />} />
-      </Routes>
+      {/* 2. Suspense shows a fallback while the chunk is being downloaded */}
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/*" element={<AuthNavigation />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
