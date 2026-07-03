@@ -1,0 +1,252 @@
+import { motion } from 'framer-motion'
+import { $api } from '../../../api/client'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { ClipboardList, UserCheck, Loader2, CheckCircle2, ArrowBigRight, Car } from 'lucide-react'
+
+const STATUS_STYLES = {
+    assigned: 'border-sky-900/50 bg-sky-900/20 text-sky-400 [&>span]:bg-sky-500',
+    in_progress: 'border-amber-900/50 bg-amber-900/20 text-amber-400 [&>span]:bg-amber-500',
+    completed: 'border-green-900/50 bg-green-900/20 text-green-400 [&>span]:bg-green-500',
+}
+
+const getStatusStyle = (status) =>
+    STATUS_STYLES[status] || 'border-slate-800 bg-slate-900/40 text-slate-400 [&>span]:bg-slate-500'
+
+const STAT_CARDS = [
+    { key: 'total', label: 'Total Jobs', icon: ClipboardList, accent: 'text-slate-300', ring: 'bg-slate-800/80 border-slate-700/50' },
+    { key: 'assigned', label: 'Assigned', icon: UserCheck, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
+    { key: 'in_progress', label: 'In Progress', icon: Loader2, accent: 'text-amber-400', ring: 'bg-amber-500/10 border-amber-500/20' },
+    { key: 'completed', label: 'Completed', icon: CheckCircle2, accent: 'text-green-400', ring: 'bg-green-500/10 border-green-500/20' },
+]
+
+const AssignedJobs = () => {
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 5
+    const navigate = useNavigate()
+
+    const { data: jobs = [], isLoading } = useQuery({
+        queryKey: ['assigned-jobs'],
+        queryFn: () => $api('/repair-jobs/repair'),
+    })
+
+    // Pagination Logic
+    const indexOfLastItem = currentPage * itemsPerPage
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage
+    const currentJobs = jobs.slice(indexOfFirstItem, indexOfLastItem)
+    const totalPages = Math.ceil(jobs.length / itemsPerPage)
+
+    const counts = {
+        total: jobs.filter((job) => job.status === 'confirmed').length,
+        assigned: jobs.filter((job) => job.status === 'assigned').length,
+        in_progress: jobs.filter((job) => job.status === 'in_progress').length,
+        completed: jobs.filter((job) => job.status === 'completed').length,
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6"
+        >
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-lg font-semibold tracking-tight text-white">Assigned Jobs</h1>
+                <button
+                    onClick={() => navigate('/assign-worker', { state: { jobs } })}
+                    className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">
+                    Assign Job
+                    <ArrowBigRight size={15} />
+                </button>
+            </div>
+
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                {STAT_CARDS.map(({ key, label, icon: Icon, accent, ring }) => (
+                    <div
+                        key={key}
+                        className="flex items-center gap-3 bg-slate-950/40 border border-slate-800/70 rounded-xl p-4"
+                    >
+                        <span className={`flex items-center justify-center h-9 w-9 rounded-lg border shrink-0 ${ring} ${accent}`}>
+                            <Icon size={16} className={key === 'in_progress' ? 'animate-spin [animation-duration:2.5s]' : ''} />
+                        </span>
+                        <div className="min-w-0">
+                            <div className={`text-xl font-semibold leading-none ${accent}`}>{counts[key]}</div>
+                            <div className="text-[11px] text-slate-500 mt-1 truncate">{label}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-100 overflow-x-auto border border-slate-800/70 rounded-xl bg-slate-950/30 backdrop-blur-sm">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 text-[11px] font-semibold uppercase tracking-wider bg-slate-900/40">
+                            <th className="py-3.5 px-4 w-16">ID</th>
+                            <th className="py-3.5 px-4">Vehicle</th>
+                            <th className="py-3.5 px-4">Plate Number</th>
+                            <th className="py-3.5 px-4">Chassis Number</th>
+                            <th className="py-3.5 px-4">Requested Services</th>
+                            <th className="py-3.5 px-4">Assigned Workers</th>
+                            <th className="py-3.5 px-4 text-right">Estimated Cost</th>
+                            <th className="py-3.5 px-4 text-center w-32">Status</th>
+                            <th className="py-3.5 px-4 text-center w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/40 text-xs">
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="9" className="p-10 text-center">
+                                    <span className="text-slate-500 italic text-xs">Loading jobs...</span>
+                                </td>
+                            </tr>
+                        ) : currentJobs.length > 0 ? (
+                            currentJobs.map((job) => (
+                                <tr key={job.id} className="hover:bg-slate-800/20 group transition-colors duration-150">
+                                    {/* Job ID */}
+                                    <td className="p-4 font-mono font-medium text-slate-500 group-hover:text-slate-400 transition-colors">
+                                        #{job.id}
+                                    </td>
+
+                                    {/* Vehicle Details */}
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-2.5">
+                                            <span className="flex items-center justify-center h-7 w-7 rounded-md bg-slate-900/90 border border-slate-800 text-slate-500 group-hover:text-sky-400 group-hover:border-sky-500/30 transition-colors shrink-0">
+                                                <Car size={13} />
+                                            </span>
+                                            <div className="min-w-0">
+                                                <div className="font-medium text-slate-200 capitalize group-hover:text-white transition-colors">
+                                                    {job.vehicle?.brand} {job.vehicle?.model}
+                                                </div>
+                                                <div className="text-[10px] text-slate-500 capitalize mt-0.5">
+                                                    {job.vehicle?.body_type || 'Unknown Type'} • {job.vehicle?.engine_type}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    {/* Plate Number */}
+                                    <td className="p-4">
+                                        <span className="font-mono text-xs uppercase bg-slate-900/80 px-2 py-1 rounded border border-slate-800 text-slate-300">
+                                            {job.vehicle?.plate_number || 'N/A'}
+                                        </span>
+                                    </td>
+
+                                    {/* Chassis Number */}
+                                    <td className="p-4 font-mono text-slate-400 text-xs uppercase tracking-wide">
+                                        {job.vehicle?.chassis_number || '—'}
+                                    </td>
+
+                                    {/* Requested Services Tags */}
+                                    <td className="p-4 max-w-xs">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {job.services && job.services.length > 0 ? (
+                                                job.services.map((service) => (
+                                                    <span
+                                                        key={service.id}
+                                                        className="text-[10px] font-medium bg-slate-900/90 text-slate-300 px-2 py-0.5 rounded-md border border-slate-800 text-nowrap"
+                                                    >
+                                                        {service.name}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-slate-500 italic text-[11px]">No baseline services</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="flex flex-col gap-1.5">
+                                            {job.services && job.services.some(s => s.workers?.length > 0) ? (
+                                                job.services.map((service) =>
+                                                    service.workers && service.workers.length > 0 ? (
+                                                        <div key={service.id} className="flex flex-wrap items-center gap-1">
+                                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide shrink-0">
+                                                                {service.name}:
+                                                            </span>
+                                                            {service.workers.map((worker) => (
+                                                                <span
+                                                                    key={worker.id}
+                                                                    className="text-[10px] font-medium bg-slate-900/90 text-slate-300 px-2 py-0.5 rounded-md border border-slate-800"
+                                                                >
+                                                                    {worker.name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    ) : null
+                                                )
+                                            ) : (
+                                                <span className="text-slate-500 italic text-[11px]">Unassigned</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    {/* Estimated Cost */}
+                                    <td className="p-4 text-right font-semibold text-slate-200 font-mono tabular-nums">
+                                        ${job.estimated_cost || 0}
+                                    </td>
+
+                                    {/* Status Badge */}
+                                    <td className="p-4 text-center">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${getStatusStyle(job.status)}`}>
+                                            <span className="w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse"></span>
+                                            {job.status?.replace('_', ' ')}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <button
+                                            onClick={() => navigate(`/repair-job/${job.id}`)}
+                                            className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">
+                                            View Job
+                                            <ArrowBigRight size={15} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="9" className="p-10 text-center">
+                                    <div className="flex flex-col items-center gap-2 text-slate-500">
+                                        <ClipboardList size={20} className="text-slate-700" />
+                                        <span className="italic text-xs">No confirmed repair jobs found.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-800/60 text-xs text-slate-400">
+                    <div>
+                        Showing <span className="text-slate-200 font-medium">{indexOfFirstItem + 1}</span> to{' '}
+                        <span className="text-slate-200 font-medium">{Math.min(indexOfLastItem, jobs.length)}</span> of{' '}
+                        <span className="text-slate-200 font-medium">{jobs.length}</span> entries
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-900 disabled:hover:border-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+                        <span className="px-2 text-slate-600 font-mono">
+                            {currentPage} / {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-900 disabled:hover:border-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
+        </motion.div>
+    )
+}
+
+export default AssignedJobs
