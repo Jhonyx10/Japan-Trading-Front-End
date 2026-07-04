@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { $api } from '../../../api/client'
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import AddWorkerTypeModal from '../../../components/modals/AddWorkerTypeModal'
+import AddWorkerModal from '../../../components/AddWorkerModal'
 
 const AVATAR_COLORS = [
     'bg-violet-100 text-violet-700',
@@ -46,6 +48,8 @@ const WorkerCardSkeleton = () => (
 
 const Workers = () => {
     const [query, setQuery] = useState('')
+    const [isWorkerTypeModalOpen, setIsWorkerTypeModalOpen] = useState(false)
+    const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false)
 
     const { data: workers = [], isLoading } = useQuery({
         queryKey: ['workers'],
@@ -59,9 +63,17 @@ const Workers = () => {
             (w) =>
                 w.name?.toLowerCase().includes(q) ||
                 w.email?.toLowerCase().includes(q) ||
-                w.role?.toLowerCase().includes(q)
+                w.worker_type?.name?.toLowerCase().includes(q) // Fixed to search worker_type names properly
         )
     }, [workers, query])
+
+    const handleAddWorkerType = () => {
+        setIsWorkerTypeModalOpen(true)
+    }
+
+    const handleAddWorker = () => {
+       setIsWorkerModalOpen(true)
+    }
 
     return (
         <motion.div
@@ -71,7 +83,8 @@ const Workers = () => {
             transition={{ duration: 0.3 }}
             className="mx-auto max-w-full px-6 py-10"
         >
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Header Layout */}
+            <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                         Workers
@@ -83,25 +96,53 @@ const Workers = () => {
                     </p>
                 </div>
 
-                <div className="relative">
-                    <svg
-                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
-                    </svg>
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search workers…"
-                        className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:w-64"
-                    />
+                {/* Search & Action Buttons Container */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    {/* Search Input */}
+                    <div className="relative flex-1 sm:w-64">
+                        <svg
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                        </svg>
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search workers…"
+                            className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                        />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleAddWorkerType}
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 cursor-pointer"
+                        >
+                            <svg className="mr-1.5 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            </svg>
+                            Add Worker Type
+                        </button>
+
+                        <button
+                            onClick={handleAddWorker}
+                            className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 cursor-pointer"
+                        >
+                            <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Worker
+                        </button>
+                    </div>
                 </div>
             </div>
+
             {isLoading ? (
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {Array.from({ length: 6 }).map((_, i) => (
@@ -143,21 +184,22 @@ const Workers = () => {
                                         {getInitials(worker.name) || '?'}
                                     </div>
 
-                                    {worker?.role?.name && (
-                                        <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                                            {worker.role.name}
+                                    {/* Fixed display conditional logic from worker.role to worker.worker_type */}
+                                    {worker?.worker_type?.name && (
+                                        <span className="shrink-0 rounded-full bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300 border border-slate-700 capitalize">
+                                            {worker.worker_type.name.replace('_', ' ')}
                                         </span>
                                     )}
                                 </div>
 
                                 <div className="mt-4 min-w-0">
-                                    <p className="truncate text-[15px] font-semibold text-slate-900">
+                                    <p className="truncate text-[15px] font-semibold text-white">
                                         {worker.name}
                                     </p>
 
-                                    <div className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
+                                    <div className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-400">
                                         <svg
-                                            className="h-3.5 w-3.5 shrink-0 text-slate-400"
+                                            className="h-3.5 w-3.5 shrink-0 text-slate-500"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             stroke="currentColor"
@@ -173,6 +215,15 @@ const Workers = () => {
                     })}
                 </ul>
             )}
+            
+            <AddWorkerTypeModal
+                isOpen={isWorkerTypeModalOpen}
+                onClose={() => setIsWorkerTypeModalOpen(false)}
+            />
+            <AddWorkerModal
+                isOpen={isWorkerModalOpen}
+                onClose={() => setIsWorkerModalOpen(false)}
+            />
         </motion.div>
     )
 }

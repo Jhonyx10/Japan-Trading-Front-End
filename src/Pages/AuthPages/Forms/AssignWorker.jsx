@@ -1,38 +1,80 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { $api } from '../../../api/client'
-import { useLocation } from 'react-router-dom'
-import { Search, Car, CheckCircle2, ClipboardList, Wrench, User, Check } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Search, Car, CheckCircle2, ClipboardList, Wrench, User, Check, ArrowLeft, UserX, AlertCircle } from 'lucide-react'
+
+const getRequiredWorkerTypeId = (service) => {
+    const fromRelation =
+        service?.required_worker_type?.id ??
+        service?.required_role?.id ??
+        null
+
+    if (fromRelation != null) return Number(fromRelation)
+
+    const rawType = service?.worker_type
+    if (typeof rawType === 'number') return rawType
+    if (typeof rawType === 'string' && rawType !== '' && !Number.isNaN(Number(rawType))) {
+        return Number(rawType)
+    }
+    if (rawType && typeof rawType === 'object' && rawType.id != null) {
+        return Number(rawType.id)
+    }
+
+    return null
+}
+
+const getRequiredWorkerTypeName = (service) =>
+    service?.required_worker_type?.name ??
+    service?.required_role?.name ??
+    (typeof service?.worker_type === 'object' ? service.worker_type?.name : null) ??
+    null
+
+const getWorkerTypeId = (worker) => {
+    if (worker?.worker_type_id != null) return Number(worker.worker_type_id)
+
+    const nested = worker?.worker_type ?? worker?.workerType
+    if (nested && typeof nested === 'object' && nested.id != null) {
+        return Number(nested.id)
+    }
+
+    return null
+}
+
+const getEligibleWorkersForService = (workers, service) => {
+    const requiredTypeId = getRequiredWorkerTypeId(service)
+    if (requiredTypeId == null) return []
+
+    return workers.filter((worker) => {
+        const workerTypeId = getWorkerTypeId(worker)
+        return workerTypeId != null && workerTypeId === requiredTypeId
+    })
+}
 
 const AssignWorker = () => {
     const location = useLocation()
-    const jobs = location.state?.jobs || []
-    const [workers, setWorkers] = useState([])
-    // { [serviceId]: [workerId, workerId, ...] }
+    const navigate = useNavigate()
+    const fallbackJobs = location.state?.jobs || []
+
+    const { data: fetchedJobs = [], isLoading: jobsLoading } = useQuery({
+        queryKey: ['assigned-jobs'],
+        queryFn: () => $api('/repair-jobs/repair'),
+    })
+
+    const jobs = fetchedJobs.length > 0 ? fetchedJobs : fallbackJobs
+
+    const { data: workers = [], isLoading: loading } = useQuery({
+        queryKey: ['workers'],
+        queryFn: () => $api('/workers'),
+    })
+
     const [selectedWorkers, setSelectedWorkers] = useState({})
     const [selectedJob, setSelectedJob] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [errors, setErrors] = useState({})
-
     const [submitting, setSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState(null)
     const [submitSuccess, setSubmitSuccess] = useState(false)
-
-    useEffect(() => {
-        const fetchWorkers = async () => {
-            setLoading(true)
-            try {
-                const res = await $api('/users')
-                setWorkers(res)
-            } catch (error) {
-                setWorkers([])
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchWorkers()
-    }, [])
 
     const filteredJobs = useMemo(() => {
         const confirmedJobs = jobs.filter((job) => job.status === 'confirmed')
@@ -72,21 +114,7 @@ const AssignWorker = () => {
         [jobs]
     )
 
-    if (confirmedJobsCount === 0) {
-        return (
-            <div className="p-6 text-slate-400">
-                No confirmed jobs to assign. Please go back and select confirmed jobs.
-            </div>
-        )
-    }
-
-    if (filteredJobs.length === 0) {
-        return (
-            <div className="p-6 text-slate-400">
-                No confirmed jobs to assign. Please go back and select confirmed jobs.
-            </div>
-        )
-    }
+    const hasActiveSearch = searchTerm.trim().length > 0
 
     const handleAssignWorkers = async () => {
         if (!selectedJob) return
@@ -133,11 +161,46 @@ const AssignWorker = () => {
             transition={{ duration: 0.3 }}
             className="p-6"
         >
+            <button
+                type="button"
+                onClick={() => navigate('/repair/assigned')}
+                className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors mb-4 cursor-pointer"
+            >
+                <ArrowLeft size={16} />
+                Back to assigned jobs
+            </button>
+
             <h1 className="text-2xl font-bold text-white">Assign Worker</h1>
             <p className="text-sm text-slate-400 mt-1 mb-6">
-                Please select a repair job to assign a worker to.
+                Select a confirmed repair job and assign workers to each service.
             </p>
 
+            {jobsLoading && jobs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-500">
+                    <div className="h-10 w-10 rounded-full border-2 border-slate-700 border-t-sky-500 animate-spin" />
+                    <span className="text-sm">Loading repair jobs...</span>
+                </div>
+            ) : confirmedJobsCount === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 bg-slate-900 border border-slate-800/80 rounded-2xl">
+                    <span className="flex items-center justify-center h-14 w-14 rounded-2xl bg-slate-950 border border-slate-800 text-slate-600">
+                        <ClipboardList size={24} />
+                    </span>
+                    <div className="text-center max-w-sm">
+                        <p className="text-white font-semibold text-base">No confirmed jobs yet</p>
+                        <p className="text-slate-500 text-sm mt-1">
+                            Jobs must be confirmed before you can assign workers. Check back once a customer completes their down payment.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => navigate('/repair/assigned')}
+                        className="inline-flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={15} />
+                        Go to assigned jobs
+                    </button>
+                </div>
+            ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Job Selection Panel */}
                 <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 h-fit">
@@ -149,8 +212,17 @@ const AssignWorker = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search by vehicle, plate, or chassis number..."
-                            className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50"
+                            className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50"
                         />
+                        {hasActiveSearch && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                            >
+                                Clear
+                            </button>
+                        )}
                     </div>
 
                     {/* Job List */}
@@ -190,9 +262,23 @@ const AssignWorker = () => {
                                 )
                             })
                         ) : (
-                            <div className="flex flex-col items-center gap-2 text-slate-500 py-10">
-                                <ClipboardList size={20} className="text-slate-700" />
-                                <span className="italic text-xs">No jobs match your search.</span>
+                            <div className="flex flex-col items-center gap-3 text-slate-500 py-10 px-4">
+                                <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
+                                    <Search size={18} />
+                                </span>
+                                <div className="text-center">
+                                    <p className="text-sm font-medium text-slate-400">No jobs match your search</p>
+                                    <p className="text-xs text-slate-600 mt-0.5">
+                                        Try a different plate, brand, or chassis number.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm('')}
+                                    className="text-xs text-sky-400 hover:text-sky-300 cursor-pointer"
+                                >
+                                    Clear search
+                                </button>
                             </div>
                         )}
                     </div>
@@ -261,8 +347,10 @@ const AssignWorker = () => {
                                         <div className="space-y-3">
                                             {selectedJob.services.map((service) => {
                                                 const assignedIds = selectedWorkers[service.id] || []
-                                                const eligibleWorkers = workers.filter(
-                                                    (w) => w.role_id === service.required_role?.id
+                                                const requiredTypeName = getRequiredWorkerTypeName(service)
+                                                const eligibleWorkers = getEligibleWorkersForService(
+                                                    workers,
+                                                    service
                                                 )
                                                 return (
                                                     <div
@@ -279,9 +367,9 @@ const AssignWorker = () => {
                                                                     <div className="text-sm font-medium text-slate-200">
                                                                         {service.name}
                                                                     </div>
-                                                                    {service.required_role && (
+                                                                    {requiredTypeName && (
                                                                         <div className="text-[10px] text-slate-500 capitalize">
-                                                                            Requires: {service?.required_role?.name}
+                                                                            Requires: {requiredTypeName.replace(/_/g, ' ')}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -332,8 +420,28 @@ const AssignWorker = () => {
                                                                 })}
                                                             </div>
                                                         ) : (
-                                                            <div className="text-[11px] text-slate-500 italic">
-                                                                No available workers with the required role.
+                                                            <div className="flex items-start gap-2.5 rounded-lg border border-dashed border-slate-800 bg-slate-950/60 px-3 py-2.5">
+                                                                <span className="flex items-center justify-center h-7 w-7 rounded-md bg-slate-900 border border-slate-800 shrink-0 mt-0.5">
+                                                                    {getRequiredWorkerTypeId(service) == null ? (
+                                                                        <AlertCircle size={13} className="text-amber-400" />
+                                                                    ) : (
+                                                                        <UserX size={13} className="text-slate-500" />
+                                                                    )}
+                                                                </span>
+                                                                <div>
+                                                                    <p className="text-xs font-medium text-slate-400">
+                                                                        {getRequiredWorkerTypeId(service) == null
+                                                                            ? 'Worker type not configured'
+                                                                            : 'No matching workers available'}
+                                                                    </p>
+                                                                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                                                        {getRequiredWorkerTypeId(service) == null
+                                                                            ? 'This service needs a required worker type before assignments can be made.'
+                                                                            : requiredTypeName
+                                                                                ? `Add a worker with the "${requiredTypeName.replace(/_/g, ' ')}" type in Manage → Workers.`
+                                                                                : 'No workers match the required type for this service.'}
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -365,14 +473,22 @@ const AssignWorker = () => {
                                 )}
                             </motion.div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center gap-2 text-slate-500 py-16">
-                                <ClipboardList size={20} className="text-slate-700" />
-                                <span className="italic text-xs">Select a job to view details.</span>
+                            <div className="flex flex-col items-center justify-center gap-3 text-slate-500 py-16 px-4">
+                                <span className="flex items-center justify-center h-12 w-12 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
+                                    <ClipboardList size={22} />
+                                </span>
+                                <div className="text-center">
+                                    <p className="text-sm font-medium text-slate-400">No job selected</p>
+                                    <p className="text-xs text-slate-600 mt-0.5">
+                                        Pick a confirmed job from the list to assign workers.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </AnimatePresence>
                 </div>
             </div>
+            )}
         </motion.div>
     )
 }

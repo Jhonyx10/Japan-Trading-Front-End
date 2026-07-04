@@ -37,7 +37,7 @@ const AddServiceModal = ({ isOpen, onClose, onServiceCreated, onSubmitApi }) => 
         const fetchRoles = async () => {
             setRolesLoading(true)
             try {
-                const res = await onSubmitApi('/roles')
+                const res = await onSubmitApi('/worker-types')
                 setRoles(res)
             } catch (error) {
                 setRoles([])
@@ -130,7 +130,7 @@ const AddServiceModal = ({ isOpen, onClose, onServiceCreated, onSubmitApi }) => 
                                             </option>
                                             {roles.map((role) => (
                                                 <option key={role.id} value={role.id}>
-                                                    {role.name}
+                                                    {role.name.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
                                                 </option>
                                             ))}
                                         </select>
@@ -143,8 +143,9 @@ const AddServiceModal = ({ isOpen, onClose, onServiceCreated, onSubmitApi }) => 
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </div>
-                                    {errors.role_id && (
-                                        <p className="mt-1.5 text-xs text-rose-400">{errors.role_id[0] || errors.role_id}</p>
+                                    {/* Fixed validation error key here */}
+                                    {errors.worker_type && (
+                                        <p className="mt-1.5 text-xs text-rose-400">{errors.worker_type[0] || errors.worker_type}</p>
                                     )}
                                 </div>
 

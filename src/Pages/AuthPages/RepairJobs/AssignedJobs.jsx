@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion'
 import { $api } from '../../../api/client'
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList, UserCheck, Loader2, CheckCircle2, ArrowBigRight, Car } from 'lucide-react'
+import { ClipboardList, UserCheck, Loader2, CheckCircle2, ArrowBigRight, Car, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const STATUS_STYLES = {
     assigned: 'border-sky-900/50 bg-sky-900/20 text-sky-400 [&>span]:bg-sky-500',
@@ -23,6 +23,7 @@ const STAT_CARDS = [
 
 const AssignedJobs = () => {
     const [currentPage, setCurrentPage] = useState(1)
+    const [searchTerm, setSearchTerm] = useState('')
     const itemsPerPage = 5
     const navigate = useNavigate()
 
@@ -31,11 +32,46 @@ const AssignedJobs = () => {
         queryFn: () => $api('/repair-jobs/repair'),
     })
 
-    // Pagination Logic
+    const filteredJobs = useMemo(() => {
+        if (!searchTerm.trim()) return jobs
+
+        const term = searchTerm.toLowerCase()
+        return jobs.filter((job) =>
+            job.vehicle?.brand?.toLowerCase().includes(term) ||
+            job.vehicle?.model?.toLowerCase().includes(term) ||
+            job.vehicle?.plate_number?.toLowerCase().includes(term) ||
+            job.vehicle?.chassis_number?.toLowerCase().includes(term) ||
+            String(job.id).includes(term)
+        )
+    }, [jobs, searchTerm])
+
+    const hasActiveSearch = searchTerm.trim().length > 0
+
+    const totalPages = Math.max(1, Math.ceil(filteredJobs.length / itemsPerPage))
+
     const indexOfLastItem = currentPage * itemsPerPage
     const indexOfFirstItem = indexOfLastItem - itemsPerPage
-    const currentJobs = jobs.slice(indexOfFirstItem, indexOfLastItem)
-    const totalPages = Math.ceil(jobs.length / itemsPerPage)
+    const currentJobs = filteredJobs.slice(indexOfFirstItem, indexOfLastItem)
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm])
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages)
+        }
+    }, [currentPage, totalPages])
+
+    const goToPage = (page) => {
+        if (page < 1 || page > totalPages || page === currentPage) return
+        setCurrentPage(page)
+    }
+
+    const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1)
+
+    const showingFrom = filteredJobs.length === 0 ? 0 : indexOfFirstItem + 1
+    const showingTo = Math.min(indexOfLastItem, filteredJobs.length)
 
     const counts = {
         total: jobs.filter((job) => job.status === 'confirmed').length,
@@ -61,6 +97,27 @@ const AssignedJobs = () => {
                 </button>
             </div>
 
+            {/* Search */}
+            <div className="relative mb-5">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by ID, vehicle, plate, or chassis..."
+                    className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-16 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50"
+                />
+                {hasActiveSearch && (
+                    <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300 cursor-pointer"
+                    >
+                        Clear
+                    </button>
+                )}
+            </div>
+
             {/* Stat Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                 {STAT_CARDS.map(({ key, label, icon: Icon, accent, ring }) => (
@@ -79,7 +136,7 @@ const AssignedJobs = () => {
                 ))}
             </div>
 
-            <div className="mt-100 overflow-x-auto border border-slate-800/70 rounded-xl bg-slate-950/30 backdrop-blur-sm">
+            <div className="mt-5 overflow-x-auto border border-slate-800/70 rounded-xl bg-slate-950/30 backdrop-blur-sm">
                 <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                         <tr className="border-b border-slate-800 text-slate-400 text-[11px] font-semibold uppercase tracking-wider bg-slate-900/40">
@@ -204,10 +261,36 @@ const AssignedJobs = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="9" className="p-10 text-center">
-                                    <div className="flex flex-col items-center gap-2 text-slate-500">
-                                        <ClipboardList size={20} className="text-slate-700" />
-                                        <span className="italic text-xs">No confirmed repair jobs found.</span>
+                                <td colSpan="9" className="p-12 text-center">
+                                    <div className="flex flex-col items-center gap-3 text-slate-500">
+                                        <span className="flex items-center justify-center h-12 w-12 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
+                                            {hasActiveSearch ? (
+                                                <Search size={20} />
+                                            ) : (
+                                                <ClipboardList size={20} />
+                                            )}
+                                        </span>
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-400">
+                                                {hasActiveSearch
+                                                    ? 'No jobs match your search'
+                                                    : 'No repair jobs found'}
+                                            </p>
+                                            <p className="text-xs text-slate-600 mt-1">
+                                                {hasActiveSearch
+                                                    ? 'Try a different keyword or clear the search.'
+                                                    : 'Jobs will appear here once customers book repairs.'}
+                                            </p>
+                                        </div>
+                                        {hasActiveSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSearchTerm('')}
+                                                className="text-xs text-sky-400 hover:text-sky-300 cursor-pointer"
+                                            >
+                                                Clear search
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -216,33 +299,60 @@ const AssignedJobs = () => {
                 </table>
             </div>
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-800/60 text-xs text-slate-400">
-                    <div>
-                        Showing <span className="text-slate-200 font-medium">{indexOfFirstItem + 1}</span> to{' '}
-                        <span className="text-slate-200 font-medium">{Math.min(indexOfLastItem, jobs.length)}</span> of{' '}
-                        <span className="text-slate-200 font-medium">{jobs.length}</span> entries
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-900 disabled:hover:border-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            Previous
-                        </button>
-                        <span className="px-2 text-slate-600 font-mono">
-                            {currentPage} / {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-900 disabled:hover:border-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            Next
-                        </button>
-                    </div>
+            {/* Pagination */}
+            {!isLoading && filteredJobs.length > 0 && (
+                <div className="flex flex-col items-center gap-3 mt-4 pt-4 border-t border-slate-800/60">
+                    <p className="text-xs text-slate-500">
+                        Showing{' '}
+                        <span className="text-slate-300 font-medium">{showingFrom}</span>
+                        {' – '}
+                        <span className="text-slate-300 font-medium">{showingTo}</span>
+                        {' of '}
+                        <span className="text-slate-300 font-medium">{filteredJobs.length}</span>
+                        {' entries'}
+                        {hasActiveSearch && (
+                            <span className="text-slate-600"> (filtered from {jobs.length})</span>
+                        )}
+                    </p>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => goToPage(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                                aria-label="Previous page"
+                            >
+                                <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                            </button>
+
+                            {pageNumbers.map((page) => (
+                                <button
+                                    key={page}
+                                    type="button"
+                                    onClick={() => goToPage(page)}
+                                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-medium transition-colors cursor-pointer ${
+                                        page === currentPage
+                                            ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+                                            : 'border border-slate-800 bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                            <button
+                                type="button"
+                                onClick={() => goToPage(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                                aria-label="Next page"
+                            >
+                                <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </motion.div>

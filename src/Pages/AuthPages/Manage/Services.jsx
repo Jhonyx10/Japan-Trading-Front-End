@@ -17,8 +17,8 @@ const Services = () => {
         const roleWorkersTracker = {}
 
         services.forEach(service => {
-            const roleName = service?.required_role?.name || 'Unassigned'
-            const usersInRole = service?.required_role?.users || []
+            const roleName = service?.required_worker_type?.name || 'Unassigned'
+            const usersInRole = service?.required_worker_type?.users || []
 
             if (!roleWorkersTracker[roleName]) {
                 roleWorkersTracker[roleName] = new Set()
@@ -73,7 +73,7 @@ const Services = () => {
                         </p>
                         <h1 className="text-3xl font-bold tracking-tight text-white font-outfit">Workshop Services</h1>
                     </div>
-                    
+
                     <motion.button
                         whileHover={{ y: -1 }}
                         whileTap={{ y: 0 }}
@@ -121,12 +121,11 @@ const Services = () => {
                                                 <div className="text-xs text-slate-400 mt-1 line-clamp-2 max-w-xl">{service.description || 'No descriptive logs attached.'}</div>
                                             </td>
                                             <td className="p-4">
-                                                <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-medium tracking-wide ${
-                                                    service?.required_role?.name 
-                                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10' 
+                                                <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-medium tracking-wide ${service?.required_worker_type?.name
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10'
                                                         : 'bg-slate-900 text-slate-500'
-                                                }`}>
-                                                    {service?.required_role?.name || 'Unassigned'}
+                                                    }`}>
+                                                    {service?.required_worker_type?.name || 'Unassigned'}
                                                 </span>
                                             </td>
                                             <td className="p-4 pr-6 text-right font-mono font-medium text-slate-300">
@@ -142,7 +141,7 @@ const Services = () => {
             </motion.div>
 
             {/* Extracted Standalone Modal Subsystem */}
-            <AddServiceModal 
+            <AddServiceModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onServiceCreated={handleServiceCreated}

@@ -39,7 +39,7 @@ const VehiclePage = () => {
     const errorMessage = error?.data?.message || error?.message || 'Failed to load vehicles.'
 
     return (
-        <div className="m-4 p-4">
+        <div className="p-2">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

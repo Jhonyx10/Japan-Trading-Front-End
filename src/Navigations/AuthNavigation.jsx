@@ -7,6 +7,7 @@ import WorkersPage from '../Pages/AuthPages/Manage/Workers'
 import ServicesPage from '../Pages/AuthPages/Manage/Services'
 import RepairRequest from '../Pages/AuthPages/RepairJobs/RepairRequest'
 import AssignedJobs from '../Pages/AuthPages/RepairJobs/AssignedJobs'
+import RepairJobDetails from '../Pages/AuthPages/RepairJobs/RepairJobDetails'
 import RepairHistory from '../Pages/AuthPages/RepairJobs/RepairHistory'
 import Contracts from '../Pages/AuthPages/Invoices/Contracts'
 import Payments from '../Pages/AuthPages/Invoices/Payments'
@@ -26,6 +27,7 @@ const AuthNavigation = () => {
                 <Route path="manage/services" element={<ServicesPage />} />
                 <Route path="repair/requests" element={<RepairRequest />} />
                 <Route path="repair/assigned" element={<AssignedJobs />} />
+                <Route path="repair-job/:id" element={<RepairJobDetails />} />
                 <Route path="repair/history" element={<RepairHistory />} />
                 <Route path="invoices/contracts" element={<Contracts />} />
                 <Route path="invoices/payments" element={<Payments />} />

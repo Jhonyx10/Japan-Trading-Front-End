@@ -68,7 +68,10 @@ const AuthLayout = () => {
     })
 
     const isManageActive = location.pathname.startsWith('/manage')
-    const isRepairJobsActive = location.pathname.startsWith('/repair')
+    const isRepairJobsActive =
+        location.pathname.startsWith('/repair') ||
+        location.pathname.startsWith('/repair-job') ||
+        location.pathname.startsWith('/assign-worker')
     const isinvoicesActive = location.pathname.startsWith('/invoices')
     const isInventoryActive = location.pathname.startsWith('/inventory')
 
@@ -157,6 +160,9 @@ const AuthLayout = () => {
         const repairMatch = repairJobsSubItems.find((item) => location.pathname === item.path)
         if (repairMatch) return repairMatch.name
 
+        if (location.pathname.startsWith('/repair-job/')) return 'Job Details'
+        if (location.pathname.startsWith('/assign-worker')) return 'Assign Worker'
+
         const invoicesMatch = invoicesSubItems.find((item) => location.pathname === item.path)
         if (invoicesMatch) return invoicesMatch.name
 
@@ -215,14 +221,14 @@ const SubNavGroup = ({ items }) => (
 );
 
     return (
-        <div className="flex min-h-screen overflow-hidden bg-slate-950 font-sans text-slate-100">
+        <div className="flex h-screen overflow-hidden bg-slate-950 font-sans text-slate-100">
             <motion.aside
                 animate={{ width: sidebarOpen ? 216 : 84 }}
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="relative z-20 flex shrink-0 flex-col border-r border-slate-800/60 bg-slate-900/60"
+                className="relative z-20 flex h-screen shrink-0 flex-col overflow-hidden border-r border-slate-800/60 bg-slate-900/60"
             >
                 {/* Brand */}
-                <div className="flex h-16 items-center border-b border-slate-800/60 px-5">
+                <div className="flex h-16 shrink-0 items-center border-b border-slate-800/60 px-5">
                     <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 p-1.5">
                             <img
@@ -251,7 +257,7 @@ const SubNavGroup = ({ items }) => (
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+                <nav className="scrollbar-none min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-5">
                     <AnimatePresence mode="wait">
                         {sidebarOpen && (
                             <motion.p
@@ -530,7 +536,7 @@ const SubNavGroup = ({ items }) => (
                 </nav>
 
                 {/* Sidebar footer */}
-                <div className="border-t border-slate-800/60 p-3">
+                <div className="shrink-0 border-t border-slate-800/60 p-3">
                     <button
                         type="button"
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -561,8 +567,8 @@ const SubNavGroup = ({ items }) => (
             </motion.aside>
 
             {/* Main area */}
-            <div className="relative flex min-w-0 flex-1 flex-col">
-                <header className="z-10 flex h-16 items-center justify-between border-b border-slate-800/60 bg-slate-950/80 px-6 backdrop-blur-md md:px-8">
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-slate-800/60 bg-slate-950/80 px-6 backdrop-blur-md md:px-8">
                     <div>
                         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                             Overview
@@ -635,7 +641,7 @@ const SubNavGroup = ({ items }) => (
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 px-6 py-6 md:px-8">
+                <main className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 px-6 py-2 md:px-8">
                     <Outlet />
                 </main>
             </div>
