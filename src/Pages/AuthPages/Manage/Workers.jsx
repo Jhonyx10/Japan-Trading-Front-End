@@ -3,7 +3,7 @@ import { $api } from '../../../api/client'
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import AddWorkerTypeModal from '../../../components/modals/AddWorkerTypeModal'
-import AddWorkerModal from '../../../components/AddWorkerModal'
+import AddWorkerModal from '../../../components/modals/AddWorkerModal'
 
 const AVATAR_COLORS = [
     'bg-violet-100 text-violet-700',
