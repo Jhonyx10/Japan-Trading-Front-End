@@ -3,7 +3,8 @@ import { $api } from '../../../api/client'
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList, UserCheck, Loader2, CheckCircle2, ArrowBigRight, Car, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ClipboardList, UserCheck, Loader2, ArrowBigRight, Car, Search } from 'lucide-react'
+import Pagination from '../../../components/Pagination'
 
 const STATUS_STYLES = {
     assigned: 'border-sky-900/50 bg-sky-900/20 text-sky-400 [&>span]:bg-sky-500',
@@ -15,10 +16,9 @@ const getStatusStyle = (status) =>
     STATUS_STYLES[status] || 'border-slate-800 bg-slate-900/40 text-slate-400 [&>span]:bg-slate-500'
 
 const STAT_CARDS = [
-    { key: 'total', label: 'Total Jobs', icon: ClipboardList, accent: 'text-slate-300', ring: 'bg-slate-800/80 border-slate-700/50' },
+    { key: 'total', label: 'Confirmed', icon: ClipboardList, accent: 'text-slate-300', ring: 'bg-slate-800/80 border-slate-700/50' },
     { key: 'assigned', label: 'Assigned', icon: UserCheck, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
     { key: 'in_progress', label: 'In Progress', icon: Loader2, accent: 'text-amber-400', ring: 'bg-amber-500/10 border-amber-500/20' },
-    { key: 'completed', label: 'Completed', icon: CheckCircle2, accent: 'text-green-400', ring: 'bg-green-500/10 border-green-500/20' },
 ]
 
 const AssignedJobs = () => {
@@ -47,7 +47,7 @@ const AssignedJobs = () => {
 
     const hasActiveSearch = searchTerm.trim().length > 0
 
-    const totalPages = Math.max(1, Math.ceil(filteredJobs.length / itemsPerPage))
+    const totalPages = Math.ceil(filteredJobs.length / itemsPerPage)
 
     const indexOfLastItem = currentPage * itemsPerPage
     const indexOfFirstItem = indexOfLastItem - itemsPerPage
@@ -63,21 +63,10 @@ const AssignedJobs = () => {
         }
     }, [currentPage, totalPages])
 
-    const goToPage = (page) => {
-        if (page < 1 || page > totalPages || page === currentPage) return
-        setCurrentPage(page)
-    }
-
-    const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1)
-
-    const showingFrom = filteredJobs.length === 0 ? 0 : indexOfFirstItem + 1
-    const showingTo = Math.min(indexOfLastItem, filteredJobs.length)
-
     const counts = {
         total: jobs.filter((job) => job.status === 'confirmed').length,
         assigned: jobs.filter((job) => job.status === 'assigned').length,
         in_progress: jobs.filter((job) => job.status === 'in_progress').length,
-        completed: jobs.filter((job) => job.status === 'completed').length,
     }
 
     return (
@@ -119,7 +108,7 @@ const AssignedJobs = () => {
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                 {STAT_CARDS.map(({ key, label, icon: Icon, accent, ring }) => (
                     <div
                         key={key}
@@ -299,62 +288,19 @@ const AssignedJobs = () => {
                 </table>
             </div>
 
-            {/* Pagination */}
-            {!isLoading && filteredJobs.length > 0 && (
-                <div className="flex flex-col items-center gap-3 mt-4 pt-4 border-t border-slate-800/60">
-                    <p className="text-xs text-slate-500">
-                        Showing{' '}
-                        <span className="text-slate-300 font-medium">{showingFrom}</span>
-                        {' – '}
-                        <span className="text-slate-300 font-medium">{showingTo}</span>
-                        {' of '}
-                        <span className="text-slate-300 font-medium">{filteredJobs.length}</span>
-                        {' entries'}
-                        {hasActiveSearch && (
-                            <span className="text-slate-600"> (filtered from {jobs.length})</span>
-                        )}
-                    </p>
-
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                type="button"
-                                onClick={() => goToPage(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-                                aria-label="Previous page"
-                            >
-                                <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-                            </button>
-
-                            {pageNumbers.map((page) => (
-                                <button
-                                    key={page}
-                                    type="button"
-                                    onClick={() => goToPage(page)}
-                                    className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-medium transition-colors cursor-pointer ${
-                                        page === currentPage
-                                            ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
-                                            : 'border border-slate-800 bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
-                                    }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-
-                            <button
-                                type="button"
-                                onClick={() => goToPage(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-                                aria-label="Next page"
-                            >
-                                <ChevronRight className="h-4 w-4" strokeWidth={2} />
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredJobs.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                itemLabel="jobs"
+                summaryExtra={
+                    hasActiveSearch ? (
+                        <span className="text-slate-600"> (filtered from {jobs.length})</span>
+                    ) : null
+                }
+            />
         </motion.div>
     )
 }

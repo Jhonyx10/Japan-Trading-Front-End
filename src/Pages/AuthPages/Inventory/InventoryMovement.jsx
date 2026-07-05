@@ -2,9 +2,9 @@ import { motion } from 'framer-motion'
 import { $api } from '../../../api/client'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Package, ArrowDownCircle, ArrowUpCircle, History, Plus, PackagePlus, UserCircle } from 'lucide-react'
-import AddProductModal from '../../../components/modals/AddProductModal'
+import { Package, ArrowDownCircle, ArrowUpCircle, History, PackagePlus, UserCircle } from 'lucide-react'
 import RestockModal from '../../../components/modals/RestockModal'
+import Pagination from '../../../components/Pagination'
 
 const TYPE_STYLES = {
     in: 'border-green-900/50 bg-green-900/20 text-green-400',
@@ -30,7 +30,6 @@ const InventoryMovement = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 8
 
-    const [showAddModal, setShowAddModal] = useState(false)
     const [showRestockModal, setShowRestockModal] = useState(false)
 
     const { data: logsRes } = useQuery({
@@ -44,23 +43,6 @@ const InventoryMovement = () => {
         queryFn: () => $api('/inventories'),
     })
     const inventories = inventoriesRes?.data || []
-
-    const { data: categoriesRes } = useQuery({
-        queryKey: ['categories'],
-        queryFn: () => $api('/categories'),
-    })
-    const categories = categoriesRes?.data || []
-
-    const addProductMutation = useMutation({
-        mutationFn: (form) =>
-            $api('/inventories', {
-                method: 'POST',
-                body: JSON.stringify(form),
-            }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['inventory-logs'] })
-        },
-    })
 
     const restockMutation = useMutation({
         mutationFn: (form) =>
@@ -109,17 +91,10 @@ const InventoryMovement = () => {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowRestockModal(true)}
-                        className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
                     >
                         <PackagePlus size={15} />
                         Restock
-                    </button>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
-                    >
-                        <Plus size={15} />
-                        Add Product
                     </button>
                 </div>
             </div>
@@ -250,41 +225,12 @@ const InventoryMovement = () => {
                 </table>
             </div>
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-800/60 text-xs text-slate-400">
-                    <div>
-                        Showing <span className="text-slate-200 font-medium">{indexOfFirstItem + 1}</span> to{' '}
-                        <span className="text-slate-200 font-medium">{Math.min(indexOfLastItem, logs.length)}</span> of{' '}
-                        <span className="text-slate-200 font-medium">{logs.length}</span> entries
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-900 disabled:hover:border-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            Previous
-                        </button>
-                        <span className="px-2 text-slate-600 font-mono">
-                            {currentPage} / {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-900 disabled:hover:border-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            <AddProductModal
-                isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onSubmit={(form) => addProductMutation.mutateAsync(form)}
-                categories={categories}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={logs.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
             />
 
             <RestockModal

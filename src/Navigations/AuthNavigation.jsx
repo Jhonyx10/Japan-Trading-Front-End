@@ -10,11 +10,16 @@ import AssignedJobs from '../Pages/AuthPages/RepairJobs/AssignedJobs'
 import RepairJobDetails from '../Pages/AuthPages/RepairJobs/RepairJobDetails'
 import RepairHistory from '../Pages/AuthPages/RepairJobs/RepairHistory'
 import Contracts from '../Pages/AuthPages/Invoices/Contracts'
-import Payments from '../Pages/AuthPages/Invoices/Payments'
+import ViewInvoice from '../Pages/AuthPages/Invoices/ViewInvoice'
 import Transactions from '../Pages/AuthPages/Invoices/Transactions'
 import AssignWorker from '../Pages/AuthPages/Forms/AssignWorker'
 import Stocks from '../Pages/AuthPages/Inventory/Stocks'
 import InventoryMovement from '../Pages/AuthPages/Inventory/InventoryMovement'
+import RevenueReport from '../Pages/AuthPages/Reports/RevenueReport'
+import RepairsReport from '../Pages/AuthPages/Reports/RepairsReport'
+import InventoryReport from '../Pages/AuthPages/Reports/InventoryReport'
+import VehiclesReport from '../Pages/AuthPages/Reports/VehiclesReport'
+import FinancialReport from '../Pages/AuthPages/Reports/FinancialReport'
 
 const AuthNavigation = () => {
     return (
@@ -30,11 +35,16 @@ const AuthNavigation = () => {
                 <Route path="repair-job/:id" element={<RepairJobDetails />} />
                 <Route path="repair/history" element={<RepairHistory />} />
                 <Route path="invoices/contracts" element={<Contracts />} />
-                <Route path="invoices/payments" element={<Payments />} />
                 <Route path="invoices/transactions" element={<Transactions />} />
+                <Route path="invoices/:id" element={<ViewInvoice />} />
                 <Route path="assign-worker" element={<AssignWorker />} />
                 <Route path="inventory/stocks" element={<Stocks />} />
                 <Route path="inventory/movements" element={<InventoryMovement />} />
+                <Route path="reports/revenue" element={<RevenueReport />} />
+                <Route path="reports/repairs" element={<RepairsReport />} />
+                <Route path="reports/inventory" element={<InventoryReport />} />
+                <Route path="reports/vehicles" element={<VehiclesReport />} />
+                <Route path="reports/financial" element={<FinancialReport />} />
                 {/* Redirect all other unmatched sub-routes to dashboard */}
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />

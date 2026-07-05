@@ -18,9 +18,10 @@ import {
     History,
     FileText,
     CreditCard,
-    LucideHistory,
     Package,
     ArrowLeftRight,
+    BarChart3,
+    TrendingUp,
 } from 'lucide-react'
 import companyLogo from '../assets/Images/company-logo.png.png'
 
@@ -42,13 +43,20 @@ const repairJobsSubItems = [
 
 const invoicesSubItems = [
     { name: 'Contracts', path: '/invoices/contracts', icon: FileText },
-    { name: 'Payments', path: '/invoices/payments', icon: CreditCard },
-    { name: 'Transactions', path: '/invoices/transactions', icon: LucideHistory },
+    { name: 'Transactions', path: '/invoices/transactions', icon: CreditCard },
 ]
 
 const inventorySubItems = [
     { name: 'Stocks', path: '/inventory/stocks', icon: Package },
     { name: 'Item Movements', path: '/inventory/movements', icon: ArrowLeftRight },
+]
+
+const reportsSubItems = [
+    { name: 'Revenue', path: '/reports/revenue', icon: TrendingUp },
+    { name: 'Repair Jobs', path: '/reports/repairs', icon: Wrench },
+    { name: 'Inventory', path: '/reports/inventory', icon: Package },
+    { name: 'Vehicles', path: '/reports/vehicles', icon: Car },
+    { name: 'Financial', path: '/reports/financial', icon: FileText },
 ]
 
 const AuthLayout = () => {
@@ -60,6 +68,7 @@ const AuthLayout = () => {
     const [repairJobsOpen, setRepairJobsOpen] = useState(false)
     const [invoicesOpen, setInvoicesOpen] = useState(false)
     const [inventoryOpen, setInventoryOpen] = useState(false)
+    const [reportsOpen, setReportsOpen] = useState(false)
     const userMenuRef = useRef(null)
     const [user, setUser] = useState({
         name: 'Admin User',
@@ -74,6 +83,7 @@ const AuthLayout = () => {
         location.pathname.startsWith('/assign-worker')
     const isinvoicesActive = location.pathname.startsWith('/invoices')
     const isInventoryActive = location.pathname.startsWith('/inventory')
+    const isReportsActive = location.pathname.startsWith('/reports')
 
     // Automatically toggle dropdowns based on current route context 
     // and close non-active dropdown categories
@@ -95,14 +105,22 @@ const AuthLayout = () => {
             setManageOpen(false)
             setRepairJobsOpen(false)
             setInvoicesOpen(false)
+            setReportsOpen(false)
+        } else if (isReportsActive) {
+            setReportsOpen(true)
+            setManageOpen(false)
+            setRepairJobsOpen(false)
+            setInvoicesOpen(false)
+            setInventoryOpen(false)
         } else {
             // Closes all submenus when navigating back to top-level routes like /dashboard or /vehicles
             setManageOpen(false)
             setRepairJobsOpen(false)
             setInvoicesOpen(false)
             setInventoryOpen(false)
+            setReportsOpen(false)
         }
-    }, [location.pathname, isManageActive, isRepairJobsActive, isinvoicesActive, isInventoryActive])
+    }, [location.pathname, isManageActive, isRepairJobsActive, isinvoicesActive, isInventoryActive, isReportsActive])
 
     useEffect(() => {
         try {
@@ -162,6 +180,7 @@ const AuthLayout = () => {
 
         if (location.pathname.startsWith('/repair-job/')) return 'Job Details'
         if (location.pathname.startsWith('/assign-worker')) return 'Assign Worker'
+        if (/^\/invoices\/\d+/.test(location.pathname)) return 'View Invoice'
 
         const invoicesMatch = invoicesSubItems.find((item) => location.pathname === item.path)
         if (invoicesMatch) return invoicesMatch.name
@@ -169,7 +188,10 @@ const AuthLayout = () => {
         const inventoryMatch = inventorySubItems.find((item) => location.pathname === item.path)
         if (inventoryMatch) return inventoryMatch.name
 
-        return isManageActive ? 'Manage' : isRepairJobsActive ? 'Repair Jobs' : isinvoicesActive ? 'Invoices' : isInventoryActive ? 'Inventory' : 'Console'
+        const reportsMatch = reportsSubItems.find((item) => location.pathname === item.path)
+        if (reportsMatch) return reportsMatch.name
+
+        return isManageActive ? 'Manage' : isRepairJobsActive ? 'Repair Jobs' : isinvoicesActive ? 'Invoices' : isInventoryActive ? 'Inventory' : isReportsActive ? 'Reports' : 'Console'
     }
 
     const activePage = getActivePageName()
@@ -529,6 +551,60 @@ const SubNavGroup = ({ items }) => (
                                     className="overflow-hidden"
                                 >
                                     <SubNavGroup items={inventorySubItems} />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Reports Dropdown */}
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => setReportsOpen((open) => !open)}
+                            title={!sidebarOpen ? 'Reports' : undefined}
+                            className={dropdownTriggerClass(isReportsActive)}
+                        >
+                            {isReportsActive && (
+                                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-400" />
+                            )}
+                            <span className={dropdownIconWrapClass(isReportsActive)}>
+                                <BarChart3 className="h-[17px] w-[17px]" strokeWidth={2} />
+                            </span>
+
+                            <AnimatePresence mode="wait">
+                                {sidebarOpen && (
+                                    <motion.span
+                                        initial={{ opacity: 0, x: -6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -6 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="truncate"
+                                    >
+                                        Reports
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
+
+                            {sidebarOpen && (
+                                <ChevronDown
+                                    className={`ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform ${
+                                        reportsOpen ? 'rotate-180' : ''
+                                    }`}
+                                    strokeWidth={2}
+                                />
+                            )}
+                        </button>
+
+                        <AnimatePresence initial={false}>
+                            {reportsOpen && sidebarOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
+                                >
+                                    <SubNavGroup items={reportsSubItems} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
