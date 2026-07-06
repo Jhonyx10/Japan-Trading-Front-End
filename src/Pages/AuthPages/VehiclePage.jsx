@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import {
     Plus,
@@ -88,6 +89,7 @@ const getStatusConfig = (status) => {
 }
 
 const VehiclePage = () => {
+    const navigate = useNavigate()
     const [currentPage, setCurrentPage] = useState(1)
 
     const { data, isLoading, isError, error } = useQuery({
@@ -137,7 +139,11 @@ const VehiclePage = () => {
                         </p>
                         <h1 className="text-lg font-semibold text-white">Vehicles</h1>
                     </div>
-                    <button className="group flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-5 py-2.5 text-md font-semibold text-indigo-300 shadow-sm transition-all hover:border-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-200 active:scale-[0.97] cursor-pointer">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/vehicles/add')}
+                        className="group flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-5 py-2.5 text-md font-semibold text-indigo-300 shadow-sm transition-all hover:border-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-200 active:scale-[0.97] cursor-pointer"
+                    >
                         <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" strokeWidth={2.5} />
                         <span>Add Vehicle</span>
                     </button>

@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import companyLogo from '../assets/Images/company-logo.png.png'
 import LoginPage from './LoginPage'
 
 const HomePage = () => {
     const [loginOpen, setLoginOpen] = useState(false)
+    const [searchParams] = useSearchParams()
+    const sessionNotice = searchParams.get('session') === 'expired'
+        ? 'Your web session ended because another administrator signed in, or your access expired.'
+        : null
 
     // Layout Orchestration Variants
     const containerVariants = {
@@ -79,6 +83,11 @@ const HomePage = () => {
 
             {/* Hero section */}
             <main className="flex-1 flex flex-col justify-center max-w-7xl mx-auto px-8 md:px-16 lg:px-24 py-16 md:py-20 relative z-10 w-full">
+                {sessionNotice && (
+                    <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                        {sessionNotice}
+                    </div>
+                )}
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"

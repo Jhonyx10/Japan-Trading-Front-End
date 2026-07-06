@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { $api } from '../api/client'
+import { saveSession, clearSession } from '../utils/auth'
+import { isRoleAllowedOnWeb } from '../constants/roles'
 
 const LoginPage = () => {
     const navigate = useNavigate()
     const [errors, setErrors] = useState({})
+    const [notice, setNotice] = useState('')
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -17,25 +20,39 @@ const LoginPage = () => {
         e.preventDefault()
         setLoading(true)
         setErrors({})
+        setNotice('')
 
         try {
-            // cleanly matches your Laravel endpoints setup
             const res = await $api('/login', {
                 method: 'POST',
-                body: formData,
+                body: {
+                    email: formData.email,
+                    password: formData.password,
+                    client: 'web',
+                },
             })
 
-            const { access_token, user } = res
+            const { access_token, user, message } = res
 
-            // Save essential session items straight to localStorage
-            localStorage.setItem('accessToken', access_token)
-            localStorage.setItem('userData', JSON.stringify(user))
+            if (!isRoleAllowedOnWeb(user?.role)) {
+                clearSession()
+                setErrors({
+                    email: ['Only administrators can access the web dashboard.'],
+                })
+                return
+            }
 
-            // Redirect smoothly to your dashboard layout
+            saveSession(access_token, user)
+
+            if (message) {
+                setNotice(message)
+            }
+
             navigate('/dashboard')
         } 
         catch (error) {
-            // ofetch cleanly exposes the backend validation structure here
+            clearSession()
+
             if (error.status === 422) {
                 setErrors(error._data?.errors || {})
             } else if (error.status === 401 || error.status === 403) {
@@ -51,6 +68,17 @@ const LoginPage = () => {
 
     return (
         <form onSubmit={handleLogin} className="w-full max-w-lg mx-auto flex flex-col gap-6">
+            {notice && (
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                    {notice}
+                </div>
+            )}
+
+            {errors.email && (
+                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+                    {Array.isArray(errors.email) ? errors.email[0] : errors.email}
+                </div>
+            )}
             {/* Email Field */}
             <div className="flex flex-col gap-2.5">
                 <label

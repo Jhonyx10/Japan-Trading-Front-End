@@ -22,8 +22,10 @@ import {
     ArrowLeftRight,
     BarChart3,
     TrendingUp,
+    Loader2,
 } from 'lucide-react'
 import companyLogo from '../assets/Images/company-logo.png.png'
+import { logout } from '../utils/auth'
 
 const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -69,6 +71,7 @@ const AuthLayout = () => {
     const [invoicesOpen, setInvoicesOpen] = useState(false)
     const [inventoryOpen, setInventoryOpen] = useState(false)
     const [reportsOpen, setReportsOpen] = useState(false)
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
     const userMenuRef = useRef(null)
     const [user, setUser] = useState({
         name: 'Admin User',
@@ -155,11 +158,18 @@ const AuthLayout = () => {
         }
     }, [])
 
-    const handleLogout = () => {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('userData')
+    const handleLogout = async () => {
+        if (isLoggingOut) return
+
+        setIsLoggingOut(true)
         setUserMenuOpen(false)
-        navigate('/login')
+
+        try {
+            await logout()
+        } finally {
+            setIsLoggingOut(false)
+            navigate('/', { replace: true })
+        }
     }
 
     const handleProfileNavigate = () => {
@@ -180,6 +190,7 @@ const AuthLayout = () => {
 
         if (location.pathname.startsWith('/repair-job/')) return 'Job Details'
         if (location.pathname.startsWith('/assign-worker')) return 'Assign Worker'
+        if (location.pathname === '/vehicles/add') return 'Add Vehicle'
         if (/^\/invoices\/\d+/.test(location.pathname)) return 'View Invoice'
 
         const invoicesMatch = invoicesSubItems.find((item) => location.pathname === item.path)
@@ -704,11 +715,16 @@ const SubNavGroup = ({ items }) => (
                                         <button
                                             type="button"
                                             onClick={handleLogout}
+                                            disabled={isLoggingOut}
                                             role="menuitem"
-                                            className="mt-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
+                                            className="mt-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
                                         >
-                                            <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
-                                            Logout
+                                            {isLoggingOut ? (
+                                                <Loader2 className="h-[17px] w-[17px] animate-spin" strokeWidth={2} />
+                                            ) : (
+                                                <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
+                                            )}
+                                            {isLoggingOut ? 'Signing out...' : 'Logout'}
                                         </button>
                                     </div>
                                 </motion.div>

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AuthLayout from '../Layouts/AuthLayout'
+import ProtectedRoute from '../components/ProtectedRoute'
 import DashboardPage from '../Pages/AuthPages/DashboardPage'
 import ProfilePage from '../Pages/AuthPages/ProfilePage'
 import VehiclePage from '../Pages/AuthPages/VehiclePage'
@@ -13,6 +14,7 @@ import Contracts from '../Pages/AuthPages/Invoices/Contracts'
 import ViewInvoice from '../Pages/AuthPages/Invoices/ViewInvoice'
 import Transactions from '../Pages/AuthPages/Invoices/Transactions'
 import AssignWorker from '../Pages/AuthPages/Forms/AssignWorker'
+import AddVehicle from '../Pages/AuthPages/Forms/AddVehicle'
 import Stocks from '../Pages/AuthPages/Inventory/Stocks'
 import InventoryMovement from '../Pages/AuthPages/Inventory/InventoryMovement'
 import RevenueReport from '../Pages/AuthPages/Reports/RevenueReport'
@@ -24,10 +26,17 @@ import FinancialReport from '../Pages/AuthPages/Reports/FinancialReport'
 const AuthNavigation = () => {
     return (
         <Routes>
-            <Route element={<AuthLayout />}>
+            <Route
+                element={
+                    <ProtectedRoute>
+                        <AuthLayout />
+                    </ProtectedRoute>
+                }
+            >
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="vehicles" element={<VehiclePage />} />
+                <Route path="vehicles/add" element={<AddVehicle />} />
                 <Route path="manage/workers" element={<WorkersPage />} />
                 <Route path="manage/services" element={<ServicesPage />} />
                 <Route path="repair/requests" element={<RepairRequest />} />
