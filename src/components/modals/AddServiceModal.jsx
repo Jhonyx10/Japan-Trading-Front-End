@@ -5,12 +5,15 @@ const AddServiceModal = ({ isOpen, onClose, onServiceCreated, onSubmitApi }) => 
     const [formData, setFormData] = useState({
         name: '',
         worker_type: '',
+        item_category_id: '',
         base_price: '',
     })
     const [loading, setLoading] = useState(false)
     const [errors, setErrors] = useState({})
     const [roles, setRoles] = useState([])
+    const [itemCategories, setItemCategories] = useState([])
     const [rolesLoading, setRolesLoading] = useState(true)
+    const [itemCategoriesLoading, setItemCategoriesLoading] = useState(true)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -31,22 +34,42 @@ const AddServiceModal = ({ isOpen, onClose, onServiceCreated, onSubmitApi }) => 
         }
     }
 
-    useEffect(() => {
-        if (!isOpen) return
+useEffect(() => {
+    if (!isOpen) return
 
-        const fetchRoles = async () => {
-            setRolesLoading(true)
-            try {
-                const res = await onSubmitApi('/worker-types')
-                setRoles(res)
-            } catch (error) {
+    let isActive = true
+
+    const fetchData = async () => {
+        setItemCategoriesLoading(true)
+        setRolesLoading(true)
+        try {
+            const [categoriesRes, rolesRes] = await Promise.all([
+                onSubmitApi('/categories'),
+                onSubmitApi('/worker-types'),
+            ])
+            if (isActive) {
+                setItemCategories(categoriesRes.data ?? [])
+                setRoles(rolesRes.data ?? [])
+            }
+        } catch (error) {
+            if (isActive) {
+                setItemCategories([])
                 setRoles([])
-            } finally {
+            }
+        } finally {
+            if (isActive) {
+                setItemCategoriesLoading(false)
                 setRolesLoading(false)
             }
         }
-        fetchRoles()
-    }, [isOpen])
+    }
+
+    fetchData() // ← this call was missing
+
+    return () => {
+        isActive = false
+    }
+}, [isOpen, onSubmitApi])
 
     return (
         <AnimatePresence>
@@ -148,14 +171,47 @@ const AddServiceModal = ({ isOpen, onClose, onServiceCreated, onSubmitApi }) => 
                                         <p className="mt-1.5 text-xs text-rose-400">{errors.worker_type[0] || errors.worker_type}</p>
                                     )}
                                 </div>
-
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-slate-400">
+                                        Item Category
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            value={formData.item_category_id}
+                                            onChange={(e) => setFormData({ ...formData, item_category_id: e.target.value })}
+                                            disabled={itemCategoriesLoading}
+                                            className="w-full appearance-none rounded-lg border border-slate-800 bg-slate-950 px-3.5 py-2.5 pr-9 text-sm text-white placeholder:text-slate-600 outline-none transition-colors focus:border-indigo-500"
+                                        >
+                                            <option value="" disabled>
+                                                {itemCategoriesLoading ? 'Loading categories...' : 'Select an item category'}
+                                            </option>
+                                            {itemCategories.map((category) => (
+                                                <option key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <svg
+                                            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                    {errors.item_category_id && (
+                                        <p className="mt-1.5 text-xs text-rose-400">{errors.item_category_id[0] || errors.item_category_id}</p>
+                                    )}
+                                </div>
                                 <div>
                                     <label className="mb-1.5 block text-xs font-medium text-slate-400">
                                         Base price
                                     </label>
                                     <div className="relative">
                                         <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-500">
-                                            $
+                                            ₱
                                         </span>
                                         <input
                                             type="number"

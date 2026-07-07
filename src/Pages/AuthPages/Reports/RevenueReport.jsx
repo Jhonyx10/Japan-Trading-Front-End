@@ -3,7 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend,
 } from 'recharts'
-import { DollarSign, CreditCard, TrendingUp, Calendar } from 'lucide-react'
+import { PhilippinePeso, CreditCard, TrendingUp, Calendar } from 'lucide-react'
 import { $api } from '../../../api/client'
 import {
     ReportShell, StatGrid, ChartCard,
@@ -26,7 +26,7 @@ const RevenueReport = () => {
     const byType = data?.by_type ?? []
 
     const stats = [
-        { key: 'total', label: 'Total Collected', value: formatCurrency(summary.total_collected), icon: DollarSign, accent: 'text-emerald-400', ring: 'bg-emerald-500/10 border-emerald-500/20' },
+        { key: 'total', label: 'Total Collected', value: formatCurrency(summary.total_collected), icon: PhilippinePeso, accent: 'text-emerald-400', ring: 'bg-emerald-500/10 border-emerald-500/20' },
         { key: 'txns', label: 'Transactions', value: summary.total_transactions ?? 0, icon: CreditCard, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
         { key: 'avg', label: 'Avg Payment', value: formatCurrency(summary.average_payment), icon: TrendingUp, accent: 'text-violet-400', ring: 'bg-violet-500/10 border-violet-500/20' },
         { key: 'month', label: 'This Month', value: formatCurrency(summary.this_month), icon: Calendar, accent: 'text-amber-400', ring: 'bg-amber-500/10 border-amber-500/20' },

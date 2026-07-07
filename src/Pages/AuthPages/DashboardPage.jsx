@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
-    DollarSign,
+    PhilippinePeso,
     Wrench,
     AlertCircle,
     Car,
@@ -15,12 +15,7 @@ import {
     TrendingUp,
 } from 'lucide-react'
 import { $api } from '../../api/client'
-
-const formatCurrency = (value) =>
-    `$${Number(value || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`
+import { formatCurrency } from '../../utils/currency'
 
 const formatRelativeTime = (dateStr) => {
     if (!dateStr) return '—'
@@ -86,7 +81,7 @@ const DashboardPage = () => {
             key: 'total_collected',
             label: 'Total Collected',
             value: formatCurrency(stats.total_collected),
-            icon: DollarSign,
+            icon: PhilippinePeso,
             accent: 'text-emerald-400',
             ring: 'bg-emerald-500/10 border-emerald-500/20',
             path: '/invoices/transactions',

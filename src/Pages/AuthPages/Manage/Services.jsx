@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { $api } from '../../../api/client'
+import { formatCurrency } from '../../../utils/currency'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import AddServiceModal from '../../../components/modals/AddServiceModal'
@@ -129,7 +130,7 @@ const Services = () => {
                                                 </span>
                                             </td>
                                             <td className="p-4 pr-6 text-right font-mono font-medium text-slate-300">
-                                                {service.base_price || service.price ? `$${Number(service.base_price || service.price).toFixed(2)}` : '—'}
+                                                {service.base_price || service.price ? formatCurrency(service.base_price || service.price) : '—'}
                                             </td>
                                         </tr>
                                     ))

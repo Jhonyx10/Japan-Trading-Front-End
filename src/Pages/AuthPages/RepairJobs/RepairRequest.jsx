@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { $api } from '../../../api/client'
+import { formatCurrency } from '../../../utils/currency'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Pagination from '../../../components/Pagination'
@@ -112,7 +113,7 @@ const RepairRequest = () => {
                                     <td className="p-4 font-mono text-right text-slate-200 font-medium">
                                         {job.total_estimated_cost && parseFloat(job.total_estimated_cost) > 0 ? (
                                             <span className="text-emerald-400 text-sm">
-                                                ${parseFloat(job.total_estimated_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {formatCurrency(job.total_estimated_cost)}
                                             </span>
                                         ) : (
                                             <span className="text-slate-500 italic text-[11px] bg-slate-900/40 border border-slate-800/40 px-2 py-0.5 rounded">

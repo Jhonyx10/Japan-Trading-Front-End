@@ -1,17 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { PlusCircle, X } from 'lucide-react'
+import { formatCurrency } from '../../utils/currency'
 
 const inputClass =
     'w-full bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50 disabled:opacity-50'
 
 const labelClass = 'block text-xs text-slate-400 mb-1.5'
-
-const formatCurrency = (value) =>
-    `$${Number(value || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`
 
 const AddSupplementalInvoiceModal = ({ isOpen, onClose, onSubmit, parentInvoice }) => {
     const [form, setForm] = useState({

@@ -5,12 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
     CreditCard,
-    DollarSign,
+    PhilippinePeso,
     CheckCircle2,
     Receipt,
     ArrowRightLeft,
 } from "lucide-react";
 import Pagination from "../../../components/Pagination";
+import { formatCurrency } from "../../../utils/currency";
 
 const STATUS_STYLES = {
     successful: "border-green-900/50 bg-green-900/20 text-green-400 [&>span]:bg-green-500",
@@ -39,12 +40,6 @@ const formatDate = (dateStr) => {
         minute: "2-digit",
     });
 };
-
-const formatCurrency = (value) =>
-    Number(value || 0).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -109,8 +104,8 @@ const Transactions = () => {
         {
             key: "totalPaid",
             label: "Total Collected",
-            value: `$${formatCurrency(totals.totalPaid)}`,
-            icon: DollarSign,
+            value: formatCurrency(totals.totalPaid),
+            icon: PhilippinePeso,
             accent: "text-sky-400",
             ring: "bg-sky-500/10 border-sky-500/20",
         },
@@ -236,7 +231,7 @@ const Transactions = () => {
                                         </td>
 
                                         <td className="p-4 text-right font-semibold text-slate-200 font-mono tabular-nums">
-                                            ${formatCurrency(transaction.invoice?.total_amount)}
+                                            {formatCurrency(transaction.invoice?.total_amount)}
                                         </td>
 
                                         <td className="p-4">
@@ -261,7 +256,7 @@ const Transactions = () => {
 
                                         <td className="p-4 text-right font-mono tabular-nums">
                                             <span className="text-green-400 font-semibold">
-                                                ${formatCurrency(transaction.amount_paid)}
+                                                {formatCurrency(transaction.amount_paid)}
                                             </span>
                                         </td>
 

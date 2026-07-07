@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X } from 'lucide-react'
 
 const inputClass =
@@ -7,7 +7,7 @@ const inputClass =
 
 const labelClass = 'block text-xs text-slate-400 mb-1.5'
 
-const RestockModal = ({ isOpen, onClose, onSubmit, inventories }) => {
+const RestockModal = ({ isOpen, onClose, onSubmit, inventories, onSubmitApi }) => {
     const [form, setForm] = useState({
         inventory_id: '',
         quantity: '',
@@ -16,10 +16,61 @@ const RestockModal = ({ isOpen, onClose, onSubmit, inventories }) => {
     const [submitting, setSubmitting] = useState(false)
     const [formError, setFormError] = useState(null)
 
+    const [categories, setCategories] = useState([])
+    const [categoriesLoading, setCategoriesLoading] = useState(true)
+    const [categoryFilter, setCategoryFilter] = useState('')
+
+    // Fetch item categories whenever the modal opens, same pattern used
+    // elsewhere for /categories — response is wrapped as { data: [...] }.
+    useEffect(() => {
+        if (!isOpen) return
+
+        let isActive = true
+
+        const fetchCategories = async () => {
+            setCategoriesLoading(true)
+            try {
+                const res = await onSubmitApi('/categories')
+                if (isActive) setCategories(res.data ?? [])
+            } catch (error) {
+                if (isActive) setCategories([])
+            } finally {
+                if (isActive) setCategoriesLoading(false)
+            }
+        }
+        fetchCategories()
+
+        return () => {
+            isActive = false
+        }
+    }, [isOpen, onSubmitApi])
+
+    // Items narrowed down to the selected category, if one is chosen.
+    const filteredInventories = useMemo(() => {
+        if (!categoryFilter) return inventories
+        return inventories.filter(
+            (item) => String(item.category_id) === String(categoryFilter)
+        )
+    }, [inventories, categoryFilter])
+
     const resetAndClose = () => {
         setForm({ inventory_id: '', quantity: '', notes: '' })
         setFormError(null)
+        setCategoryFilter('')
         onClose()
+    }
+
+    const handleCategoryFilterChange = (value) => {
+        setCategoryFilter(value)
+        // Clear the selected item if it no longer belongs to the newly chosen category.
+        setForm((prev) => {
+            const stillValid = inventories.some(
+                (item) =>
+                    String(item.id) === String(prev.inventory_id) &&
+                    (!value || String(item.category_id) === String(value))
+            )
+            return stillValid ? prev : { ...prev, inventory_id: '' }
+        })
     }
 
     const handleSubmit = async (e) => {
@@ -63,6 +114,25 @@ const RestockModal = ({ isOpen, onClose, onSubmit, inventories }) => {
 
                         <form onSubmit={handleSubmit} className="space-y-3">
                             <div>
+                                <label className={labelClass}>Filter by category</label>
+                                <select
+                                    value={categoryFilter}
+                                    onChange={(e) => handleCategoryFilterChange(e.target.value)}
+                                    disabled={categoriesLoading}
+                                    className={`${inputClass} disabled:opacity-50`}
+                                >
+                                    <option value="">
+                                        {categoriesLoading ? 'Loading categories...' : 'All categories'}
+                                    </option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
                                 <label className={labelClass}>Item</label>
                                 <select
                                     required
@@ -70,8 +140,12 @@ const RestockModal = ({ isOpen, onClose, onSubmit, inventories }) => {
                                     onChange={(e) => setForm({ ...form, inventory_id: e.target.value })}
                                     className={inputClass}
                                 >
-                                    <option value="">Select item</option>
-                                    {inventories.map((item) => (
+                                    <option value="">
+                                        {filteredInventories.length === 0
+                                            ? 'No items in this category'
+                                            : 'Select item'}
+                                    </option>
+                                    {filteredInventories.map((item) => (
                                         <option key={item.id} value={item.id}>
                                             {item.item_name} ({item.sku})
                                         </option>

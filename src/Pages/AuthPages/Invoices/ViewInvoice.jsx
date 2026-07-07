@@ -17,6 +17,7 @@ import {
     StickyNote,
 } from 'lucide-react'
 import { $api } from '../../../api/client'
+import { formatCurrency } from '../../../utils/currency'
 import AddSupplementalInvoiceModal from '../../../components/modals/AddSupplementalInvoiceModal'
 
 const STATUS_STYLES = {
@@ -46,12 +47,6 @@ const formatDate = (dateStr) => {
         minute: '2-digit',
     })
 }
-
-const formatCurrency = (value) =>
-    `$${Number(value || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`
 
 const DetailCard = ({ label, value, mono = false, accent = false, className = '' }) => (
     <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">

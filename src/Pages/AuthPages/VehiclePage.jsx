@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { $api } from '../../api/client'
 import Pagination from '../../components/Pagination'
+import { formatPrice } from '../../utils/currency'
 
 const ITEMS_PER_PAGE = 6
 
@@ -70,14 +71,6 @@ const DEFAULT_STATUS = {
     dot: 'bg-slate-400',
     ring: 'group-hover:border-slate-600',
     accent: 'from-slate-500/10 via-transparent to-transparent',
-}
-
-const formatPrice = (value) => {
-    if (value == null || value === '') return null
-    return `$${Number(value).toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    })}`
 }
 
 const getStatusConfig = (status) => {

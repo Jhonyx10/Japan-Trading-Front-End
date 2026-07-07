@@ -3,8 +3,9 @@ import { $api } from "../../../api/client";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, DollarSign, AlertCircle, CheckCircle2, Eye, Link2 } from "lucide-react";
+import { FileText, PhilippinePeso, AlertCircle, CheckCircle2, Eye, Link2 } from "lucide-react";
 import Pagination from "../../../components/Pagination";
+import { formatCurrency } from "../../../utils/currency";
 
 const STATUS_STYLES = {
     unpaid: "border-amber-900/50 bg-amber-900/20 text-amber-400 [&>span]:bg-amber-500",
@@ -25,9 +26,6 @@ const formatDate = (dateStr) => {
         year: "numeric",
     });
 };
-
-const formatCurrency = (value) =>
-    Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const getParentInvoice = (invoice) => invoice.parent ?? null;
 const getChildInvoices = (invoice) => invoice.children ?? [];
@@ -57,8 +55,8 @@ const Contracts = () => {
     const STAT_CARDS = [
         { key: "total", label: "Total Invoices", value: totals.total, icon: FileText, accent: "text-slate-300", ring: "bg-slate-800/80 border-slate-700/50" },
         { key: "unpaid", label: "Unpaid", value: totals.unpaid, icon: AlertCircle, accent: "text-amber-400", ring: "bg-amber-500/10 border-amber-500/20" },
-        { key: "totalAmount", label: "Total Billed", value: `$${formatCurrency(totals.totalAmount)}`, icon: DollarSign, accent: "text-sky-400", ring: "bg-sky-500/10 border-sky-500/20" },
-        { key: "totalDue", label: "Amount Due", value: `$${formatCurrency(totals.totalDue)}`, icon: CheckCircle2, accent: "text-green-400", ring: "bg-green-500/10 border-green-500/20" },
+        { key: "totalAmount", label: "Total Billed", value: formatCurrency(totals.totalAmount), icon: PhilippinePeso, accent: "text-sky-400", ring: "bg-sky-500/10 border-sky-500/20" },
+        { key: "totalDue", label: "Amount Due", value: formatCurrency(totals.totalDue), icon: CheckCircle2, accent: "text-green-400", ring: "bg-green-500/10 border-green-500/20" },
     ];
 
     return (
@@ -178,12 +176,12 @@ const Contracts = () => {
                                         </td>
 
                                         <td className="p-4 text-right font-semibold text-slate-200 font-mono tabular-nums">
-                                            ${formatCurrency(invoice.total_amount)}
+                                            {formatCurrency(invoice.total_amount)}
                                         </td>
 
                                         <td className="p-4 text-right font-mono tabular-nums">
                                             <span className={Number(invoice.amount_due) > 0 ? "text-amber-400 font-semibold" : "text-slate-500"}>
-                                                ${formatCurrency(invoice.amount_due)}
+                                                {formatCurrency(invoice.amount_due)}
                                             </span>
                                         </td>
 

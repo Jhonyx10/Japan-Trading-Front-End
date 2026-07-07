@@ -238,6 +238,7 @@ const InventoryMovement = () => {
                 onClose={() => setShowRestockModal(false)}
                 onSubmit={(form) => restockMutation.mutateAsync(form)}
                 inventories={inventories}
+                onSubmitApi={$api}
             />
         </motion.div>
     )

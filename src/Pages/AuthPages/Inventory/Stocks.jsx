@@ -6,9 +6,7 @@ import { Package, AlertTriangle, Boxes, Tag, Plus, FolderPlus } from 'lucide-rea
 import AddProductModal from '../../../components/modals/AddProductModal'
 import AddItemCategoryModal from '../../../components/modals/AddItemCategoryModal'
 import Pagination from '../../../components/Pagination'
-
-const formatCurrency = (value) =>
-    Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+import { formatCurrency } from '../../../utils/currency'
 
 const Stocks = () => {
     const queryClient = useQueryClient()
@@ -61,7 +59,7 @@ const Stocks = () => {
     const STAT_CARDS = [
         { key: 'total', label: 'Total Items', value: totals.total, icon: Boxes, accent: 'text-slate-300', ring: 'bg-slate-800/80 border-slate-700/50' },
         { key: 'lowStock', label: 'Low Stock', value: totals.lowStock, icon: AlertTriangle, accent: 'text-amber-400', ring: 'bg-amber-500/10 border-amber-500/20' },
-        { key: 'totalValue', label: 'Total Stock Value', value: `$${formatCurrency(totals.totalValue)}`, icon: Package, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
+        { key: 'totalValue', label: 'Total Stock Value', value: formatCurrency(totals.totalValue), icon: Package, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
     ]
 
     return (
@@ -175,7 +173,7 @@ const Stocks = () => {
                                         </td>
 
                                         <td className="p-4 text-right font-semibold text-slate-200 font-mono tabular-nums">
-                                            ${formatCurrency(item.unit_price)}
+                                            {formatCurrency(item.unit_price)}
                                         </td>
 
                                         <td className="p-4 text-center">

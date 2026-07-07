@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { $api } from '../../../api/client'
+import { formatCurrency } from '../../../utils/currency'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Search, Car, CheckCircle2, ClipboardList, Wrench, User, Check, ArrowLeft, UserX, AlertCircle } from 'lucide-react'
 
@@ -328,7 +329,7 @@ const AssignWorker = () => {
                                     <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
                                         <div className="text-slate-500 mb-1">Estimated Cost</div>
                                         <div className="font-mono text-slate-200">
-                                            ${selectedJob.estimated_cost || 0}
+                                            {formatCurrency(selectedJob.total_estimated_cost ?? selectedJob.estimated_cost)}
                                         </div>
                                     </div>
                                     <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">

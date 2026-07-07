@@ -1,19 +1,12 @@
 import { Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { formatCurrency, formatCompact } from '../../utils/currency'
+
+export { formatCurrency, formatCompact }
 
 export const CHART_COLORS = [
     '#34d399', '#38bdf8', '#a78bfa', '#fbbf24', '#fb7185', '#818cf8', '#2dd4bf', '#f472b6',
 ]
-
-export const formatCurrency = (value) =>
-    `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-
-export const formatCompact = (value) => {
-    const n = Number(value || 0)
-    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`
-    if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`
-    return formatCurrency(n)
-}
 
 export const chartTooltipStyle = {
     contentStyle: {

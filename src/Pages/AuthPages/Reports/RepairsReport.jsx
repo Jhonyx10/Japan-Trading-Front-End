@@ -3,7 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, LineChart, Line,
 } from 'recharts'
-import { Wrench, CheckCircle, Clock, Percent, DollarSign } from 'lucide-react'
+import { Wrench, CheckCircle, Clock, Percent, PhilippinePeso } from 'lucide-react'
 import { $api } from '../../../api/client'
 import {
     ReportShell, StatGrid, ChartCard,
@@ -57,7 +57,7 @@ const RepairsReport = () => {
             <StatGrid stats={stats} />
 
             <div className="flex items-center gap-3 bg-slate-900 border border-slate-800/80 rounded-xl px-4 py-3">
-                <DollarSign size={16} className="text-slate-500" />
+                <PhilippinePeso size={16} className="text-slate-500" />
                 <span className="text-sm text-slate-400">Average estimated cost:</span>
                 <span className="text-sm font-semibold text-white">{formatCurrency(summary.avg_estimated_cost)}</span>
             </div>

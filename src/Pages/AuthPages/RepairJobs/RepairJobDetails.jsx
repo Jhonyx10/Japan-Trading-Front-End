@@ -11,6 +11,7 @@ import {
     AlertCircle,
 } from 'lucide-react'
 import { $api } from '../../../api/client'
+import { formatCurrency } from '../../../utils/currency'
 
 const JOB_STEPS = [
     { key: 'pending', label: 'Pending' },
@@ -46,12 +47,6 @@ const SERVICE_STATUS_STYLES = {
 
 const formatLabel = (value) =>
     value ? String(value).replace(/_/g, ' ') : '—'
-
-const formatCurrency = (value) =>
-    `₱${Number(value || 0).toLocaleString('en-PH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`
 
 function JobProgressTracker({ status }) {
     if (status === 'cancelled') {

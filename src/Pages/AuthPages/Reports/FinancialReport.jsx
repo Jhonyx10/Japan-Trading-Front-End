@@ -3,7 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, LineChart, Line,
 } from 'recharts'
-import { FileText, DollarSign, AlertCircle, Percent, Receipt } from 'lucide-react'
+import { FileText, PhilippinePeso, AlertCircle, Percent, Receipt } from 'lucide-react'
 import { $api } from '../../../api/client'
 import {
     ReportShell, StatGrid, ChartCard,
@@ -27,7 +27,7 @@ const FinancialReport = () => {
 
     const stats = [
         { key: 'invoiced', label: 'Total Invoiced', value: formatCurrency(summary.total_invoiced), icon: FileText, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
-        { key: 'collected', label: 'Total Collected', value: formatCurrency(summary.total_collected), icon: DollarSign, accent: 'text-emerald-400', ring: 'bg-emerald-500/10 border-emerald-500/20' },
+        { key: 'collected', label: 'Total Collected', value: formatCurrency(summary.total_collected), icon: PhilippinePeso, accent: 'text-emerald-400', ring: 'bg-emerald-500/10 border-emerald-500/20' },
         { key: 'outstanding', label: 'Outstanding', value: formatCurrency(summary.total_outstanding), icon: AlertCircle, accent: 'text-amber-400', ring: 'bg-amber-500/10 border-amber-500/20' },
         { key: 'rate', label: 'Collection Rate', value: `${summary.collection_rate ?? 0}%`, icon: Percent, accent: 'text-violet-400', ring: 'bg-violet-500/10 border-violet-500/20' },
     ]

@@ -12,6 +12,7 @@ import {
     ImageIcon,
 } from 'lucide-react'
 import { $api } from '../../../api/client'
+import { formatCurrency } from '../../../utils/currency'
 
 const BODY_TYPES = ['sedan', 'suv', 'truck', 'van', 'coupe', 'hatchback', 'pickup', 'mpv']
 const ENGINE_TYPES = ['gasoline', 'diesel', 'hybrid', 'electric']
@@ -287,17 +288,15 @@ const AddVehicle = () => {
                             <button
                                 type="button"
                                 onClick={() => updateField('status', 'for_sale')}
-                                className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors cursor-pointer ${
-                                    form.status === 'for_sale'
+                                className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors cursor-pointer ${form.status === 'for_sale'
                                         ? 'border-emerald-500/40 bg-emerald-500/10'
                                         : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                                }`}
+                                    }`}
                             >
-                                <span className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
-                                    form.status === 'for_sale'
+                                <span className={`flex h-9 w-9 items-center justify-center rounded-lg border ${form.status === 'for_sale'
                                         ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'
                                         : 'border-slate-800 text-slate-500'
-                                }`}>
+                                    }`}>
                                     <Tag size={16} />
                                 </span>
                                 <div>
@@ -308,17 +307,15 @@ const AddVehicle = () => {
                             <button
                                 type="button"
                                 onClick={() => updateField('status', 'for_repair')}
-                                className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors cursor-pointer ${
-                                    form.status === 'for_repair'
+                                className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors cursor-pointer ${form.status === 'for_repair'
                                         ? 'border-amber-500/40 bg-amber-500/10'
                                         : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                                }`}
+                                    }`}
                             >
-                                <span className={`flex h-9 w-9 items-center justify-center rounded-lg border ${
-                                    form.status === 'for_repair'
+                                <span className={`flex h-9 w-9 items-center justify-center rounded-lg border ${form.status === 'for_repair'
                                         ? 'border-amber-500/30 bg-amber-500/15 text-amber-400'
                                         : 'border-slate-800 text-slate-500'
-                                }`}>
+                                    }`}>
                                     <Wrench size={16} />
                                 </span>
                                 <div>
@@ -355,7 +352,7 @@ const AddVehicle = () => {
                                             />
                                             <span className="flex-1 text-sm text-slate-200">{service.name}</span>
                                             <span className="text-xs font-mono text-emerald-400">
-                                                ${Number(service.base_price || 0).toLocaleString()}
+                                                {formatCurrency(service.base_price)}
                                             </span>
                                         </label>
                                     ))

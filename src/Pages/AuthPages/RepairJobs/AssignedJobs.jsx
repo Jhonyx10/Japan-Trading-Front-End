@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { ClipboardList, UserCheck, Loader2, ArrowBigRight, Car, Search } from 'lucide-react'
 import Pagination from '../../../components/Pagination'
+import { formatCurrency } from '../../../utils/currency'
 
 const STATUS_STYLES = {
     assigned: 'border-sky-900/50 bg-sky-900/20 text-sky-400 [&>span]:bg-sky-500',
@@ -27,10 +28,17 @@ const AssignedJobs = () => {
     const itemsPerPage = 5
     const navigate = useNavigate()
 
-    const { data: jobs = [], isLoading } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ['assigned-jobs'],
-        queryFn: () => $api('/repair-jobs/repair'),
+        queryFn: async () => {
+            const response = await $api('/repair-jobs/repair')
+            if (Array.isArray(response)) return response
+            if (Array.isArray(response?.data)) return response.data
+            return []
+        },
     })
+
+    const jobs = useMemo(() => (Array.isArray(data) ? data : []), [data])
 
     const filteredJobs = useMemo(() => {
         if (!searchTerm.trim()) return jobs
@@ -228,7 +236,7 @@ const AssignedJobs = () => {
                                     </td>
                                     {/* Estimated Cost */}
                                     <td className="p-4 text-right font-semibold text-slate-200 font-mono tabular-nums">
-                                        ${job.estimated_cost || 0}
+                                        {formatCurrency(job.total_estimated_cost ?? job.estimated_cost)}
                                     </td>
 
                                     {/* Status Badge */}

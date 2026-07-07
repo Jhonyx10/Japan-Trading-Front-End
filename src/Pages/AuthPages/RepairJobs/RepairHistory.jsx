@@ -7,7 +7,7 @@ import {
     History,
     CheckCircle2,
     XCircle,
-    DollarSign,
+    PhilippinePeso,
     Calendar,
     Car,
     Search,
@@ -16,6 +16,7 @@ import {
     Clock,
 } from 'lucide-react'
 import Pagination from '../../../components/Pagination'
+import { formatCurrency } from '../../../utils/currency'
 
 const STATUS_STYLES = {
     completed: 'border-green-900/50 bg-green-900/20 text-green-400 [&>span]:bg-green-500',
@@ -45,9 +46,6 @@ const formatDate = (dateStr) => {
         year: 'numeric',
     })
 }
-
-const formatCurrency = (value) =>
-    `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 const getDuration = (start, end) => {
     if (!start || !end) return '—'
@@ -82,10 +80,17 @@ const RepairHistory = () => {
     const itemsPerPage = 5
     const navigate = useNavigate()
 
-    const { data: jobs = [], isLoading } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ['repair-history'],
-        queryFn: () => $api('/repair-jobs/history'),
+        queryFn: async () => {
+            const response = await $api('/repair-jobs/history')
+            if (Array.isArray(response)) return response
+            if (Array.isArray(response?.data)) return response.data
+            return []
+        },
     })
+
+    const jobs = useMemo(() => (Array.isArray(data) ? data : []), [data])
 
     const filteredJobs = useMemo(() => {
         let result = jobs
@@ -148,7 +153,7 @@ const RepairHistory = () => {
         { key: 'total', label: 'Completed', value: counts.total, icon: CheckCircle2, accent: 'text-emerald-400', ring: 'bg-emerald-500/10 border-emerald-500/20' },
         { key: 'thisMonth', label: 'This Month', value: counts.thisMonth, icon: Calendar, accent: 'text-sky-400', ring: 'bg-sky-500/10 border-sky-500/20' },
         { key: 'cancelled', label: 'Cancelled', value: counts.cancelled, icon: XCircle, accent: 'text-red-400', ring: 'bg-red-500/10 border-red-500/20' },
-        { key: 'totalBilled', label: 'Total Billed', value: formatCurrency(counts.totalBilled), icon: DollarSign, accent: 'text-violet-400', ring: 'bg-violet-500/10 border-violet-500/20' },
+        { key: 'totalBilled', label: 'Total Billed', value: formatCurrency(counts.totalBilled), icon: PhilippinePeso, accent: 'text-violet-400', ring: 'bg-violet-500/10 border-violet-500/20' },
     ]
 
     const clearFilters = () => {
