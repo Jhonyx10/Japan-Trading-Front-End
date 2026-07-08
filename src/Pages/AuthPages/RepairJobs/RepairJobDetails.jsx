@@ -71,19 +71,17 @@ function JobProgressTracker({ status }) {
                     return (
                         <div key={step.key} className="flex flex-1 items-center">
                             <span
-                                className={`h-3 w-3 shrink-0 rounded-full border-2 transition-colors ${
-                                    isActive
+                                className={`h-3 w-3 shrink-0 rounded-full border-2 transition-colors ${isActive
                                         ? 'border-sky-400 bg-sky-400 shadow-[0_0_0_4px_rgba(56,189,248,0.15)]'
                                         : isDone
-                                          ? 'border-emerald-400 bg-emerald-400'
-                                          : 'border-slate-700 bg-slate-800'
-                                }`}
+                                            ? 'border-emerald-400 bg-emerald-400'
+                                            : 'border-slate-700 bg-slate-800'
+                                    }`}
                             />
                             {!isLast && (
                                 <span
-                                    className={`mx-1 h-0.5 flex-1 ${
-                                        index < currentIndex ? 'bg-emerald-400' : 'bg-slate-800'
-                                    }`}
+                                    className={`mx-1 h-0.5 flex-1 ${index < currentIndex ? 'bg-emerald-400' : 'bg-slate-800'
+                                        }`}
                                 />
                             )}
                         </div>
@@ -94,13 +92,12 @@ function JobProgressTracker({ status }) {
                 {JOB_STEPS.map((step, index) => (
                     <span
                         key={step.key}
-                        className={`text-[10px] font-medium leading-tight ${
-                            currentIndex >= 0 && index <= currentIndex
+                        className={`text-[10px] font-medium leading-tight ${currentIndex >= 0 && index <= currentIndex
                                 ? index === currentIndex
                                     ? 'text-sky-400'
                                     : 'text-emerald-400'
                                 : 'text-slate-600'
-                        } ${index === 0 ? 'text-left' : index === JOB_STEPS.length - 1 ? 'text-right' : 'text-center'}`}
+                            } ${index === 0 ? 'text-left' : index === JOB_STEPS.length - 1 ? 'text-right' : 'text-center'}`}
                         style={{ flex: index === 0 || index === JOB_STEPS.length - 1 ? undefined : 1 }}
                     >
                         {step.label}
@@ -134,19 +131,17 @@ function ServiceProgressTracker({ status }) {
                     return (
                         <div key={step.key} className="flex flex-1 items-center">
                             <span
-                                className={`h-2 w-2 shrink-0 rounded-full ${
-                                    isActive
+                                className={`h-2 w-2 shrink-0 rounded-full ${isActive
                                         ? 'bg-blue-400 ring-2 ring-blue-400/20'
                                         : isDone
-                                          ? 'bg-emerald-400'
-                                          : 'bg-slate-700'
-                                }`}
+                                            ? 'bg-emerald-400'
+                                            : 'bg-slate-700'
+                                    }`}
                             />
                             {!isLast && (
                                 <span
-                                    className={`mx-0.5 h-px flex-1 ${
-                                        index < currentIndex ? 'bg-emerald-400/70' : 'bg-slate-800'
-                                    }`}
+                                    className={`mx-0.5 h-px flex-1 ${index < currentIndex ? 'bg-emerald-400/70' : 'bg-slate-800'
+                                        }`}
                                 />
                             )}
                         </div>
@@ -157,13 +152,12 @@ function ServiceProgressTracker({ status }) {
                 {SERVICE_STEPS.map((step, index) => (
                     <span
                         key={step.key}
-                        className={`text-[9px] font-medium ${
-                            currentIndex >= 0 && index <= currentIndex
+                        className={`text-[9px] font-medium ${currentIndex >= 0 && index <= currentIndex
                                 ? index === currentIndex
                                     ? 'text-blue-400'
                                     : 'text-emerald-500'
                                 : 'text-slate-600'
-                        }`}
+                            }`}
                     >
                         {step.label}
                     </span>
@@ -256,10 +250,9 @@ const RepairJobDetails = () => {
                                 </p>
                             </div>
                             <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border capitalize ${
-                                    JOB_STATUS_STYLES[job.status] ??
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border capitalize ${JOB_STATUS_STYLES[job.status] ??
                                     'border-slate-800 bg-slate-900/40 text-slate-400'
-                                }`}
+                                    }`}
                             >
                                 {formatLabel(job.status)}
                             </span>
@@ -364,6 +357,10 @@ const RepairJobDetails = () => {
                                         service.required_role?.name ??
                                         null
                                     const assignedWorkers = service.workers ?? []
+                                    const repairJobService = job?.repair_job_services?.find(
+                                        (rjs) => rjs.id === service.pivot?.id
+                                    )
+                                    const items = repairJobService?.items ?? []
 
                                     return (
                                         <div
@@ -388,10 +385,9 @@ const RepairJobDetails = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span
-                                                        className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full border capitalize ${
-                                                            SERVICE_STATUS_STYLES[serviceStatus] ??
+                                                        className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full border capitalize ${SERVICE_STATUS_STYLES[serviceStatus] ??
                                                             'bg-slate-800 text-slate-400 border-slate-700'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {formatLabel(serviceStatus)}
                                                     </span>
@@ -402,6 +398,26 @@ const RepairJobDetails = () => {
                                             </div>
 
                                             <ServiceProgressTracker status={serviceStatus} />
+
+                                            {items.length > 0 && (
+                                                <div className="mt-4 pt-3 border-t border-slate-800/60">
+                                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                                                        Selected Items
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {items.map((item) => (
+                                                            <div key={item.id} className="flex justify-between items-center bg-slate-900/50 px-3 py-2 rounded-lg border border-slate-800/50">
+                                                                <span className="text-xs font-medium text-slate-300">
+                                                                    {item.inventory?.item_name || 'Unknown item'}
+                                                                </span>
+                                                                <span className="text-xs font-mono font-semibold text-slate-400">
+                                                                    {formatCurrency(item.unit_price)}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div className="mt-4 pt-3 border-t border-slate-800/60">
                                                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">

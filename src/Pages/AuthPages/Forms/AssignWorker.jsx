@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { $api } from '../../../api/client'
 import { formatCurrency } from '../../../utils/currency'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -56,6 +56,7 @@ const getEligibleWorkersForService = (workers, service) => {
 const AssignWorker = () => {
     const location = useLocation()
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
     const fallbackJobs = location.state?.jobs || []
 
     const { data: fetchedJobs = [], isLoading: jobsLoading } = useQuery({
@@ -145,6 +146,7 @@ const AssignWorker = () => {
             })
             setSubmitSuccess(true)
             setSelectedWorkers({})
+            queryClient.invalidateQueries({ queryKey: ['assigned-jobs'] })
         } catch (error) {
             setSubmitError(
                 error?.message || 'Failed to assign workers. Please try again.'
@@ -202,294 +204,327 @@ const AssignWorker = () => {
                     </button>
                 </div>
             ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Job Selection Panel */}
-                <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 h-fit">
-                    {/* Search */}
-                    <div className="relative mb-4">
-                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search by vehicle, plate, or chassis number..."
-                            className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50"
-                        />
-                        {hasActiveSearch && (
-                            <button
-                                type="button"
-                                onClick={() => setSearchTerm('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
-                            >
-                                Clear
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Job List */}
-                    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-                        {filteredJobs.length > 0 ? (
-                            filteredJobs.map((job) => {
-                                const isSelected = selectedJob?.id === job.id
-                                return (
-                                    <button
-                                        key={job.id}
-                                        onClick={() => handleSelectJob(job)}
-                                        className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors cursor-pointer ${isSelected
-                                            ? 'border-sky-500/50 bg-sky-500/10'
-                                            : 'border-slate-800 bg-slate-950/30 hover:bg-slate-800/30 hover:border-slate-700'
-                                            }`}
-                                    >
-                                        <span
-                                            className={`flex items-center justify-center h-9 w-9 rounded-lg border shrink-0 ${isSelected
-                                                ? 'bg-sky-500/20 border-sky-500/30 text-sky-400'
-                                                : 'bg-slate-900/90 border-slate-800 text-slate-500'
-                                                }`}
-                                        >
-                                            <Car size={15} />
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="font-medium text-sm text-slate-200 capitalize truncate">
-                                                {job.vehicle?.brand} {job.vehicle?.model}
-                                            </div>
-                                            <div className="text-[11px] text-slate-500 font-mono uppercase mt-0.5">
-                                                {job.vehicle?.plate_number || 'N/A'}
-                                            </div>
-                                        </div>
-                                        {isSelected && (
-                                            <CheckCircle2 size={16} className="text-sky-400 shrink-0" />
-                                        )}
-                                    </button>
-                                )
-                            })
-                        ) : (
-                            <div className="flex flex-col items-center gap-3 text-slate-500 py-10 px-4">
-                                <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
-                                    <Search size={18} />
-                                </span>
-                                <div className="text-center">
-                                    <p className="text-sm font-medium text-slate-400">No jobs match your search</p>
-                                    <p className="text-xs text-slate-600 mt-0.5">
-                                        Try a different plate, brand, or chassis number.
-                                    </p>
-                                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Job Selection Panel */}
+                    <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 h-fit">
+                        {/* Search */}
+                        <div className="relative mb-4">
+                            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search by vehicle, plate, or chassis number..."
+                                className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50"
+                            />
+                            {hasActiveSearch && (
                                 <button
                                     type="button"
                                     onClick={() => setSearchTerm('')}
-                                    className="text-xs text-sky-400 hover:text-sky-300 cursor-pointer"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
                                 >
-                                    Clear search
+                                    Clear
                                 </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                            )}
+                        </div>
 
-                {/* Selected Job Details Panel */}
-                <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5">
-                    <h2 className="text-sm font-semibold text-slate-300 mb-4">Job Details</h2>
-
-                    <AnimatePresence mode="wait">
-                        {selectedJob ? (
-                            <motion.div
-                                key={selectedJob.id}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.2 }}
-                                className="space-y-4"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span className="flex items-center justify-center h-10 w-10 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
-                                        <Car size={17} />
+                        {/* Job List */}
+                        <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                            {filteredJobs.length > 0 ? (
+                                filteredJobs.map((job) => {
+                                    const isSelected = selectedJob?.id === job.id
+                                    return (
+                                        <button
+                                            key={job.id}
+                                            onClick={() => handleSelectJob(job)}
+                                            className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors cursor-pointer ${isSelected
+                                                ? 'border-sky-500/50 bg-sky-500/10'
+                                                : 'border-slate-800 bg-slate-950/30 hover:bg-slate-800/30 hover:border-slate-700'
+                                                }`}
+                                        >
+                                            <span
+                                                className={`flex items-center justify-center h-9 w-9 rounded-lg border shrink-0 ${isSelected
+                                                    ? 'bg-sky-500/20 border-sky-500/30 text-sky-400'
+                                                    : 'bg-slate-900/90 border-slate-800 text-slate-500'
+                                                    }`}
+                                            >
+                                                <Car size={15} />
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="font-medium text-sm text-slate-200 capitalize truncate">
+                                                    {job.vehicle?.brand} {job.vehicle?.model}
+                                                </div>
+                                                <div className="text-[11px] text-slate-500 font-mono uppercase mt-0.5">
+                                                    {job.vehicle?.plate_number || 'N/A'}
+                                                </div>
+                                            </div>
+                                            {isSelected && (
+                                                <CheckCircle2 size={16} className="text-sky-400 shrink-0" />
+                                            )}
+                                        </button>
+                                    )
+                                })
+                            ) : (
+                                <div className="flex flex-col items-center gap-3 text-slate-500 py-10 px-4">
+                                    <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
+                                        <Search size={18} />
                                     </span>
+                                    <div className="text-center">
+                                        <p className="text-sm font-medium text-slate-400">No jobs match your search</p>
+                                        <p className="text-xs text-slate-600 mt-0.5">
+                                            Try a different plate, brand, or chassis number.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchTerm('')}
+                                        className="text-xs text-sky-400 hover:text-sky-300 cursor-pointer"
+                                    >
+                                        Clear search
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Selected Job Details Panel */}
+                    <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5">
+                        <h2 className="text-sm font-semibold text-slate-300 mb-4">Job Details</h2>
+
+                        <AnimatePresence mode="wait">
+                            {selectedJob ? (
+                                <motion.div
+                                    key={selectedJob.id}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="space-y-4"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex items-center justify-center h-10 w-10 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
+                                            <Car size={17} />
+                                        </span>
+                                        <div>
+                                            <div className="font-semibold text-white capitalize">
+                                                {selectedJob.vehicle?.brand} {selectedJob.vehicle?.model}
+                                            </div>
+                                            <div className="text-[11px] text-slate-500 capitalize">
+                                                {selectedJob.vehicle?.body_type || 'Unknown Type'} • {selectedJob.vehicle?.engine_type}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                        <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
+                                            <div className="text-slate-500 mb-1">Plate Number</div>
+                                            <div className="font-mono text-slate-200 uppercase">
+                                                {selectedJob.vehicle?.plate_number || 'N/A'}
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
+                                            <div className="text-slate-500 mb-1">Chassis Number</div>
+                                            <div className="font-mono text-slate-200 uppercase">
+                                                {selectedJob.vehicle?.chassis_number || '—'}
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
+                                            <div className="text-slate-500 mb-1">Estimated Cost</div>
+                                            <div className="font-mono text-slate-200">
+                                                {formatCurrency(selectedJob.total_estimated_cost ?? selectedJob.estimated_cost)}
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
+                                            <div className="text-slate-500 mb-1">Status</div>
+                                            <div className="text-slate-200 capitalize">
+                                                {selectedJob.status?.replace('_', ' ')}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Services stacked, each with its own worker assignment form */}
                                     <div>
-                                        <div className="font-semibold text-white capitalize">
-                                            {selectedJob.vehicle?.brand} {selectedJob.vehicle?.model}
-                                        </div>
-                                        <div className="text-[11px] text-slate-500 capitalize">
-                                            {selectedJob.vehicle?.body_type || 'Unknown Type'} • {selectedJob.vehicle?.engine_type}
-                                        </div>
-                                    </div>
-                                </div>
+                                        <div className="text-slate-500 text-xs mb-2">Requested Services</div>
 
-                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                    <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
-                                        <div className="text-slate-500 mb-1">Plate Number</div>
-                                        <div className="font-mono text-slate-200 uppercase">
-                                            {selectedJob.vehicle?.plate_number || 'N/A'}
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
-                                        <div className="text-slate-500 mb-1">Chassis Number</div>
-                                        <div className="font-mono text-slate-200 uppercase">
-                                            {selectedJob.vehicle?.chassis_number || '—'}
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
-                                        <div className="text-slate-500 mb-1">Estimated Cost</div>
-                                        <div className="font-mono text-slate-200">
-                                            {formatCurrency(selectedJob.total_estimated_cost ?? selectedJob.estimated_cost)}
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
-                                        <div className="text-slate-500 mb-1">Status</div>
-                                        <div className="text-slate-200 capitalize">
-                                            {selectedJob.status?.replace('_', ' ')}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Services stacked, each with its own worker assignment form */}
-                                <div>
-                                    <div className="text-slate-500 text-xs mb-2">Requested Services</div>
-
-                                    {selectedJob.services && selectedJob.services.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {selectedJob.services.map((service) => {
-                                                const assignedIds = selectedWorkers[service.id] || []
-                                                const requiredTypeName = getRequiredWorkerTypeName(service)
-                                                const eligibleWorkers = getEligibleWorkersForService(
-                                                    workers,
-                                                    service
-                                                )
-                                                return (
-                                                    <div
-                                                        key={service.id}
-                                                        className="bg-slate-950/40 border border-slate-800/70 rounded-xl p-4"
-                                                    >
-                                                        {/* Service header */}
-                                                        <div className="flex items-center justify-between mb-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="flex items-center justify-center h-7 w-7 rounded-md bg-slate-900/90 border border-slate-800 text-sky-400 shrink-0">
-                                                                    <Wrench size={13} />
-                                                                </span>
-                                                                <div>
-                                                                    <div className="text-sm font-medium text-slate-200">
-                                                                        {service.name}
-                                                                    </div>
-                                                                    {requiredTypeName && (
-                                                                        <div className="text-[10px] text-slate-500 capitalize">
-                                                                            Requires: {requiredTypeName.replace(/_/g, ' ')}
+                                        {selectedJob.services && selectedJob.services.length > 0 ? (
+                                            <div className="space-y-3">
+                                                {selectedJob.services.map((service) => {
+                                                    const assignedIds = selectedWorkers[service.id] || []
+                                                    const requiredTypeName = getRequiredWorkerTypeName(service)
+                                                    const eligibleWorkers = getEligibleWorkersForService(
+                                                        workers,
+                                                        service
+                                                    )
+                                                    return (
+                                                        <div
+                                                            key={service.id}
+                                                            className="bg-slate-950/40 border border-slate-800/70 rounded-xl p-4"
+                                                        >
+                                                            {/* Service header */}
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="flex items-center justify-center h-7 w-7 rounded-md bg-slate-900/90 border border-slate-800 text-sky-400 shrink-0">
+                                                                        <Wrench size={13} />
+                                                                    </span>
+                                                                    <div>
+                                                                        <div className="text-sm font-medium text-slate-200">
+                                                                            {service.name}
                                                                         </div>
-                                                                    )}
+                                                                        {requiredTypeName && (
+                                                                            <div className="text-[10px] text-slate-500 capitalize">
+                                                                                Requires: {requiredTypeName.replace(/_/g, ' ')}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
+                                                                {assignedIds.length > 0 && (
+                                                                    <span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">
+                                                                        {assignedIds.length} assigned
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                            {assignedIds.length > 0 && (
-                                                                <span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">
-                                                                    {assignedIds.length} assigned
-                                                                </span>
-                                                            )}
-                                                        </div>
 
-                                                        {/* Worker selection */}
-                                                        {loading ? (
-                                                            <div className="text-[11px] text-slate-500 italic">
-                                                                Loading workers...
-                                                            </div>
-                                                        ) : eligibleWorkers.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-1.5">
-                                                                {eligibleWorkers.map((worker) => {
-                                                                    const isChecked = assignedIds.includes(worker.id)
-                                                                    return (
-                                                                        <button
-                                                                            key={worker.id}
-                                                                            type="button"
-                                                                            onClick={() =>
-                                                                                toggleWorkerForService(service.id, worker.id)
-                                                                            }
-                                                                            className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${isChecked
-                                                                                ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
-                                                                                : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40'
-                                                                                }`}
-                                                                        >
-                                                                            <span
-                                                                                className={`flex items-center justify-center h-4 w-4 rounded-full border shrink-0 ${isChecked
-                                                                                    ? 'bg-sky-500 border-sky-500 text-white'
-                                                                                    : 'border-slate-700 text-transparent'
+                                                            {/* Worker selection */}
+                                                            {loading ? (
+                                                                <div className="text-[11px] text-slate-500 italic">
+                                                                    Loading workers...
+                                                                </div>
+                                                            ) : eligibleWorkers.length > 0 ? (
+                                                                <div className="flex flex-wrap gap-1.5">
+                                                                    {eligibleWorkers.map((worker) => {
+                                                                        const isChecked = assignedIds.includes(worker.id)
+                                                                        return (
+                                                                            <button
+                                                                                key={worker.id}
+                                                                                type="button"
+                                                                                onClick={() =>
+                                                                                    toggleWorkerForService(service.id, worker.id)
+                                                                                }
+                                                                                className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${isChecked
+                                                                                    ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
+                                                                                    : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40'
                                                                                     }`}
                                                                             >
-                                                                                <Check size={10} strokeWidth={3} />
-                                                                            </span>
-                                                                            <User size={11} className="opacity-60" />
-                                                                            {worker.name}
-                                                                            {workers.filter(w => w.name === worker.name).length > 1 && (
-                                                                                <span className="text-slate-500">({worker.email.split('@')[0]})</span>
-                                                                            )}
-                                                                        </button>
-                                                                    )
-                                                                })}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-start gap-2.5 rounded-lg border border-dashed border-slate-800 bg-slate-950/60 px-3 py-2.5">
-                                                                <span className="flex items-center justify-center h-7 w-7 rounded-md bg-slate-900 border border-slate-800 shrink-0 mt-0.5">
-                                                                    {getRequiredWorkerTypeId(service) == null ? (
-                                                                        <AlertCircle size={13} className="text-amber-400" />
-                                                                    ) : (
-                                                                        <UserX size={13} className="text-slate-500" />
-                                                                    )}
-                                                                </span>
-                                                                <div>
-                                                                    <p className="text-xs font-medium text-slate-400">
-                                                                        {getRequiredWorkerTypeId(service) == null
-                                                                            ? 'Worker type not configured'
-                                                                            : 'No matching workers available'}
-                                                                    </p>
-                                                                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                                                                        {getRequiredWorkerTypeId(service) == null
-                                                                            ? 'This service needs a required worker type before assignments can be made.'
-                                                                            : requiredTypeName
-                                                                                ? `Add a worker with the "${requiredTypeName.replace(/_/g, ' ')}" type in Manage → Workers.`
-                                                                                : 'No workers match the required type for this service.'}
-                                                                    </p>
+                                                                                <span
+                                                                                    className={`flex items-center justify-center h-4 w-4 rounded-full border shrink-0 ${isChecked
+                                                                                        ? 'bg-sky-500 border-sky-500 text-white'
+                                                                                        : 'border-slate-700 text-transparent'
+                                                                                        }`}
+                                                                                >
+                                                                                    <Check size={10} strokeWidth={3} />
+                                                                                </span>
+                                                                                <User size={11} className="opacity-60" />
+                                                                                {worker.name}
+                                                                                {workers.filter(w => w.name === worker.name).length > 1 && (
+                                                                                    <span className="text-slate-500">({worker.email.split('@')[0]})</span>
+                                                                                )}
+                                                                            </button>
+                                                                        )
+                                                                    })}
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <span className="text-slate-500 italic text-[11px]">
-                                            No baseline services
-                                        </span>
+                                                            ) : (
+                                                                <div className="flex items-start gap-2.5 rounded-lg border border-dashed border-slate-800 bg-slate-950/60 px-3 py-2.5">
+                                                                    <span className="flex items-center justify-center h-7 w-7 rounded-md bg-slate-900 border border-slate-800 shrink-0 mt-0.5">
+                                                                        {getRequiredWorkerTypeId(service) == null ? (
+                                                                            <AlertCircle size={13} className="text-amber-400" />
+                                                                        ) : (
+                                                                            <UserX size={13} className="text-slate-500" />
+                                                                        )}
+                                                                    </span>
+                                                                    <div>
+                                                                        <p className="text-xs font-medium text-slate-400">
+                                                                            {getRequiredWorkerTypeId(service) == null
+                                                                                ? 'Worker type not configured'
+                                                                                : 'No matching workers available'}
+                                                                        </p>
+                                                                        <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                                                            {getRequiredWorkerTypeId(service) == null
+                                                                                ? 'This service needs a required worker type before assignments can be made.'
+                                                                                : requiredTypeName
+                                                                                    ? `Add a worker with the "${requiredTypeName.replace(/_/g, ' ')}" type in Manage → Workers.`
+                                                                                    : 'No workers match the required type for this service.'}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <span className="text-slate-500 italic text-[11px]">
+                                                No baseline services
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Submit assignment */}
+                                    <button
+                                        type="button"
+                                        onClick={handleAssignWorkers}
+                                        disabled={submitting}
+                                        className="w-full flex items-center justify-center gap-1.5 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors cursor-pointer mt-2"
+                                    >
+                                        {submitting ? 'Saving...' : 'Save Assignments'}
+                                    </button>
+
+                                    {submitError && (
+                                        <p className="text-[11px] text-red-400 mt-2">{submitError}</p>
                                     )}
+                                </motion.div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center gap-3 text-slate-500 py-16 px-4">
+                                    <span className="flex items-center justify-center h-12 w-12 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
+                                        <ClipboardList size={22} />
+                                    </span>
+                                    <div className="text-center">
+                                        <p className="text-sm font-medium text-slate-400">No job selected</p>
+                                        <p className="text-xs text-slate-600 mt-0.5">
+                                            Pick a confirmed job from the list to assign workers.
+                                        </p>
+                                    </div>
                                 </div>
-
-                                {/* Submit assignment */}
-                                <button
-                                    type="button"
-                                    onClick={handleAssignWorkers}
-                                    disabled={submitting}
-                                    className="w-full flex items-center justify-center gap-1.5 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors cursor-pointer mt-2"
-                                >
-                                    {submitting ? 'Saving...' : 'Save Assignments'}
-                                </button>
-
-                                {submitError && (
-                                    <p className="text-[11px] text-red-400 mt-2">{submitError}</p>
-                                )}
-                                {submitSuccess && (
-                                    <p className="text-[11px] text-green-400 mt-2">Workers assigned successfully.</p>
-                                )}
-                            </motion.div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center gap-3 text-slate-500 py-16 px-4">
-                                <span className="flex items-center justify-center h-12 w-12 rounded-xl bg-slate-950 border border-slate-800 text-slate-600">
-                                    <ClipboardList size={22} />
-                                </span>
-                                <div className="text-center">
-                                    <p className="text-sm font-medium text-slate-400">No job selected</p>
-                                    <p className="text-xs text-slate-600 mt-0.5">
-                                        Pick a confirmed job from the list to assign workers.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </AnimatePresence>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
-            </div>
             )}
+
+            <AnimatePresence>
+                {submitSuccess && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full text-center shadow-xl flex flex-col items-center"
+                        >
+                            <div className="h-16 w-16 bg-emerald-500/10 text-emerald-400 rounded-full flex justify-center items-center mb-4">
+                                <CheckCircle2 size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">Assignments Saved</h3>
+                            <p className="text-sm text-slate-400 mt-2">
+                                Workers have been successfully assigned to the repair job services.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSubmitSuccess(false)
+                                    setSelectedJob(null)
+                                }}
+                                className="mt-6 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl transition-colors cursor-pointer"
+                            >
+                                Continue
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     )
 }

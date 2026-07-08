@@ -46,7 +46,7 @@ const InventoryMovement = () => {
 
     const restockMutation = useMutation({
         mutationFn: (form) =>
-            $api('/inventory/logs', {
+            $api('/inventory/restock', {
                 method: 'POST',
                 body: JSON.stringify({
                     inventory_id: form.inventory_id,
