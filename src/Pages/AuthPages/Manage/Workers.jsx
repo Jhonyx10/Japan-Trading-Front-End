@@ -72,7 +72,7 @@ const Workers = () => {
     }
 
     const handleAddWorker = () => {
-       setIsWorkerModalOpen(true)
+        setIsWorkerModalOpen(true)
     }
 
     return (
@@ -215,7 +215,7 @@ const Workers = () => {
                     })}
                 </ul>
             )}
-            
+
             <AddWorkerTypeModal
                 isOpen={isWorkerTypeModalOpen}
                 onClose={() => setIsWorkerTypeModalOpen(false)}

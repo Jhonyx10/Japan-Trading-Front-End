@@ -66,10 +66,10 @@ const AssignedJobs = () => {
     }, [searchTerm])
 
     useEffect(() => {
-        if (currentPage > totalPages) {
+        if (!isLoading && totalPages > 0 && currentPage > totalPages) {
             setCurrentPage(totalPages)
         }
-    }, [currentPage, totalPages])
+    }, [currentPage, totalPages, isLoading])
 
     const counts = {
         total: jobs.filter((job) => job.status === 'confirmed').length,

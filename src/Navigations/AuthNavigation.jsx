@@ -22,6 +22,7 @@ import RepairsReport from '../Pages/AuthPages/Reports/RepairsReport'
 import InventoryReport from '../Pages/AuthPages/Reports/InventoryReport'
 import VehiclesReport from '../Pages/AuthPages/Reports/VehiclesReport'
 import FinancialReport from '../Pages/AuthPages/Reports/FinancialReport'
+import WalkInPayment from '../Pages/AuthPages/Payment/WalkinPayment'
 
 const AuthNavigation = () => {
     return (
@@ -54,6 +55,7 @@ const AuthNavigation = () => {
                 <Route path="reports/inventory" element={<InventoryReport />} />
                 <Route path="reports/vehicles" element={<VehiclesReport />} />
                 <Route path="reports/financial" element={<FinancialReport />} />
+                <Route path="payments/walk-in" element={<WalkInPayment />} />
                 {/* Redirect all other unmatched sub-routes to dashboard */}
                 <Route path="" element={<Navigate to="dashboard" replace />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />

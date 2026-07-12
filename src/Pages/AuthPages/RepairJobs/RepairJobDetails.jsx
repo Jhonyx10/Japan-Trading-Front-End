@@ -9,6 +9,7 @@ import {
     ClipboardList,
     Loader2,
     AlertCircle,
+    CreditCard
 } from 'lucide-react'
 import { $api } from '../../../api/client'
 import { formatCurrency } from '../../../utils/currency'
@@ -72,10 +73,10 @@ function JobProgressTracker({ status }) {
                         <div key={step.key} className="flex flex-1 items-center">
                             <span
                                 className={`h-3 w-3 shrink-0 rounded-full border-2 transition-colors ${isActive
-                                        ? 'border-sky-400 bg-sky-400 shadow-[0_0_0_4px_rgba(56,189,248,0.15)]'
-                                        : isDone
-                                            ? 'border-emerald-400 bg-emerald-400'
-                                            : 'border-slate-700 bg-slate-800'
+                                    ? 'border-sky-400 bg-sky-400 shadow-[0_0_0_4px_rgba(56,189,248,0.15)]'
+                                    : isDone
+                                        ? 'border-emerald-400 bg-emerald-400'
+                                        : 'border-slate-700 bg-slate-800'
                                     }`}
                             />
                             {!isLast && (
@@ -93,10 +94,10 @@ function JobProgressTracker({ status }) {
                     <span
                         key={step.key}
                         className={`text-[10px] font-medium leading-tight ${currentIndex >= 0 && index <= currentIndex
-                                ? index === currentIndex
-                                    ? 'text-sky-400'
-                                    : 'text-emerald-400'
-                                : 'text-slate-600'
+                            ? index === currentIndex
+                                ? 'text-sky-400'
+                                : 'text-emerald-400'
+                            : 'text-slate-600'
                             } ${index === 0 ? 'text-left' : index === JOB_STEPS.length - 1 ? 'text-right' : 'text-center'}`}
                         style={{ flex: index === 0 || index === JOB_STEPS.length - 1 ? undefined : 1 }}
                     >
@@ -132,10 +133,10 @@ function ServiceProgressTracker({ status }) {
                         <div key={step.key} className="flex flex-1 items-center">
                             <span
                                 className={`h-2 w-2 shrink-0 rounded-full ${isActive
-                                        ? 'bg-blue-400 ring-2 ring-blue-400/20'
-                                        : isDone
-                                            ? 'bg-emerald-400'
-                                            : 'bg-slate-700'
+                                    ? 'bg-blue-400 ring-2 ring-blue-400/20'
+                                    : isDone
+                                        ? 'bg-emerald-400'
+                                        : 'bg-slate-700'
                                     }`}
                             />
                             {!isLast && (
@@ -153,10 +154,10 @@ function ServiceProgressTracker({ status }) {
                     <span
                         key={step.key}
                         className={`text-[9px] font-medium ${currentIndex >= 0 && index <= currentIndex
-                                ? index === currentIndex
-                                    ? 'text-blue-400'
-                                    : 'text-emerald-500'
-                                : 'text-slate-600'
+                            ? index === currentIndex
+                                ? 'text-blue-400'
+                                : 'text-emerald-500'
+                            : 'text-slate-600'
                             }`}
                     >
                         {step.label}
@@ -449,7 +450,23 @@ const RepairJobDetails = () => {
                     {/* Invoice summary */}
                     {invoice && (
                         <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6">
-                            <h2 className="text-sm font-semibold text-slate-200 mb-4">Invoice</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-sm font-semibold text-slate-200">Invoice</h2>
+                                {invoice.status !== 'paid' && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            navigate('/payments/walk-in', {
+                                                state: { invoiceId: invoice.id, repairJobId: id },
+                                            })
+                                        }
+                                        className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-semibold px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                                    >
+                                        <CreditCard size={14} />
+                                        Record Walk-in Payment
+                                    </button>
+                                )}
+                            </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                                 <div className="bg-slate-950/40 border border-slate-800/70 rounded-lg p-3">
                                     <p className="text-slate-500 mb-1">Invoice #</p>
